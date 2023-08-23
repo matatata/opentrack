@@ -39,7 +39,8 @@ mkdir -p "$install/$APPNAME.app/Contents/MacOS/Plugins"
 cp -r "$install/Plugins" "$install/$APPNAME.app/Contents/MacOS/"
 
 # Add framework and other libraries and fixup other libraries
-macdeployqt "$install/$APPNAME.app" -libpath="$install/Library"
+# assuming we use qt from macPorts:
+/opt/local/libexec/qt5/bin/macdeployqt "$install/$APPNAME.app" -libpath="$install/Library"
 sh "$dir/install-fail-tool" "$install/$APPNAME.app/Contents/Frameworks"
 
 # Create an 512 resolution size for the icon (for retina displays mostly)
@@ -62,6 +63,7 @@ rm -rf "$tmp"
 #Build DMG
 #https://github.com/andreyvit/create-dmg
 rm -rf $install/../*.dmg
+
 create-dmg \
   --volname "$APPNAME" \
   --volicon "$install/$APPNAME.app/Contents/Resources/$APPNAME.icns" \
@@ -74,7 +76,6 @@ create-dmg \
   --hide-extension "$APPNAME.app" \
   --no-internet-enable \
   --add-folder "Document" "$install/doc" 20 40 \
-  --add-folder "Xplane-Plugin" "$install/xplane" 420 40 \
   --add-folder "thirdparty" "$install/thirdparty" 620 40 \
   "$version.dmg" \
   "$install/$APPNAME.app"
