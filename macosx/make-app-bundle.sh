@@ -59,6 +59,17 @@ sips -z 512 512   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_512x512
 iconutil -c icns -o "$install/$APPNAME.app/Contents/Resources/$APPNAME.icns" "$tmp/$APPNAME.iconset"
 rm -rf "$tmp"
 
+
+if [ ! -d "$install/xplane" ]
+then
+ mkdir -p "$install/xplane"
+ echo "xplane-plugin not built, try https://github.com/amyinorbit/headtrack" > "$install/xplane/readme.txt"
+fi
+
+
+# Sign it to run it locally
+codesign --force --deep --sign - "$install/$APPNAME.app"
+
 #Build DMG
 #https://github.com/andreyvit/create-dmg
 rm -rf $install/../*.dmg
