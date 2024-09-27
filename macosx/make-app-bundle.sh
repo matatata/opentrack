@@ -42,6 +42,15 @@ cp -r "$install/Plugins" "$install/$APPNAME.app/Contents/MacOS/"
 macdeployqt "$install/$APPNAME.app" -libpath="$install/Library"
 #sh "$dir/install-fail-tool" "$install/$APPNAME.app/Contents/Frameworks"
 
+
+# On Intel I get the error ERROR: Cannot resolve rpath "@rpath/libunwind.1.dylib"
+# I copied the lib manually (from MacPorts) to solve it:
+if [ ! -f $install/$APPNAME.app/Contents/Frameworks/libunwind.1.dylib ]
+then
+ echo "libunwind missing! Trying to copy it from macports"
+ cp /opt/local/lib/libunwind.1.dylib $install/$APPNAME.app/Contents/Frameworks/
+fi
+
 # Create an 512 resolution size for the icon (for retina displays mostly)
 #gm convert -size 512x512 "$dir/../gui/images/opentrack.png" "$tmp/opentrack.png"
 convert "$dir/../gui/images/opentrack.png" -filter triangle -resize 512x512 "$tmp/opentrack.png"
