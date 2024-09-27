@@ -1,3 +1,8 @@
+## Matatata's fork to build and provide Opentrack for macOS
+About this fork see <<https://matatata.github.io/MacOpentrack.html>>.
+
+-------------
+
 ## Intro
 
 [<img src="https://github.com/opentrack/opentrack/actions/workflows/cmake.yml/badge.svg">](https://github.com/opentrack/opentrack/actions/workflows/cmake.yml)
