@@ -86,6 +86,8 @@ static QString findMacOsSystemWine(){
 #endif
 
 #ifndef OTR_WINE_NO_WRAPPER
+module_status wine::initWrapper()
+{
     static const QString library_path(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH);
 
     /////////////////////////
@@ -203,10 +205,23 @@ static QString findMacOsSystemWine(){
 
     wrapper.setProcessEnvironment(env);
     wrapper.setWorkingDirectory(OPENTRACK_BASE_PATH);
+    
     wrapper.start(wine_path, { library_path + "opentrack-wrapper-wine.exe.so" });
     wrapper.waitForStarted();
     if (wrapper.state() == QProcess::ProcessState::NotRunning) {
         return error(tr("Failed to start Wine! Make sure the binary is set correctly."));
+    }
+    return status_ok();
+}
+#endif
+
+module_status wine::initialize()
+{
+#ifndef OTR_WINE_NO_WRAPPER
+    if(!s.variant_disabled) {
+        module_status wrapper_status = initWrapper();
+        if(!wrapper_status.is_ok())
+            return wrapper_status;
     }
 #endif
 
