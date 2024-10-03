@@ -37,6 +37,9 @@ cp "$dir/PkgInfo" "$install/$APPNAME.app/Contents/"
 # Copy plugins
 mkdir -p "$install/$APPNAME.app/Contents/MacOS/Plugins"
 cp -r "$install/Plugins" "$install/$APPNAME.app/Contents/MacOS/"
+# Copy thirdparty dlls amd libs for WINE
+cp -r "$install/thirdparty/" "$install/$APPNAME.app/Contents/MacOS/Plugins/"
+echo "These third-party libraries and programs are already contained in $APPNAME.app/Contents/MacOS/Plugins/. They're required by the Wine/X-Plane-output to pass head movement data to applications/games running under WINE."> "$install/thirdparty/readme.txt"
 
 # Use either of these, two of them at the same time will break things!
 macdeployqt "$install/$APPNAME.app" -libpath="$install/Library"
