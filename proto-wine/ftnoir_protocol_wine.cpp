@@ -9,6 +9,7 @@
 
 #include <QString>
 #include <QDebug>
+#include <QFileInfo>
 
 #include "proton.h"
 
@@ -60,8 +61,29 @@ void wine::pose(const double *headpose, const double*)
     }
 }
 
-module_status wine::initialize()
-{
+#ifdef __APPLE__
+static QString findMacOsSystemWine(){
+    // on macOS looking for "wine" doesn't work,
+    // so look at the common places:
+    const QStringList commonWineInstallations = {
+        "/opt/local/bin/wine", // macports default
+        "/usr/local/bin/wine" // homebrew default
+    };
+    
+    for ( const auto& file : commonWineInstallations )
+    {
+        qDebug() << "check macOS wine: " << file;
+        QFileInfo check_file(file);
+        if (check_file.exists() && check_file.isFile()) {
+            qDebug() << "Found macOS wine: " << file;
+            return check_file.filePath();
+        }
+    }
+
+    return "wine";
+}
+#endif
+
 #ifndef OTR_WINE_NO_WRAPPER
     static const QString library_path(OPENTRACK_BASE_PATH + OPENTRACK_LIBRARY_PATH);
 
@@ -85,6 +107,12 @@ module_status wine::initialize()
                 wine_path = s.wine_custom_path;
             }
         }
+        else { // System Wine
+            #ifdef __APPLE__
+            wine_path = findMacOsSystemWine();
+            #endif   
+        }
+        
 
         // parse tilde if present
         if (wine_path[0] == '~')
