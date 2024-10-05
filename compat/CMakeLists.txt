@@ -1,5 +1,6 @@
 otr_module(compat NO-COMPAT BIN)
 
+
 if(NOT WIN32 AND NOT APPLE)
     target_link_libraries(${self} PRIVATE rt)
 endif()
@@ -10,7 +11,11 @@ endif()
 
 
 if(APPLE)
-    target_link_libraries(${self} PRIVATE proc)
+    find_library(AVFoundation AVFoundation)
+    find_library(Foundation Foundation)
+    set_source_files_properties(camera_names_mac.mm PROPERTIES COMPILE_FLAGS "-fno-objc-arc")
+    target_sources(${self} PRIVATE camera_names_mac.mm)
+    target_link_libraries(${self} PRIVATE proc ${AVFoundation} ${Foundation})
 elseif(LINUX)
     otr_pkgconfig_(has-libproc2 ${self} libproc2)
     if(has-libproc2)
