@@ -12,10 +12,6 @@
 #   include <unistd.h>
 #endif
 
-#ifdef __APPLE__
-#   include <QCameraDevice>
-#   include <QMediaDevices>
-#endif
 
 #ifdef __linux__
 #   include <fcntl.h>
@@ -132,8 +128,8 @@ std::vector<std::tuple<QString, int>> get_camera_names()
         }
     }
 #elif defined __APPLE__
-    for (const QCameraDevice& camera_info : QMediaDevices::videoInputs())
-        ret.push_back({ camera_info.description(), ret.size() });
+    for (const QString& camName : apple_get_camera_names())
+        ret.push_back({ camName, ret.size() });
 #endif
 
     return ret;
