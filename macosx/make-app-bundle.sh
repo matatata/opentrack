@@ -18,7 +18,8 @@ test -n "$dir"
 install="$2"
 test -n "$install" 
 version="$3"
-test -n "$version" 
+test -n "$version"
+code_sign_identity="${4:-'-'}"
 
 tmp="$(mktemp -d "/tmp/$APPNAME-tmp.XXXXXXX")"
 test $? -eq 0 
@@ -27,26 +28,12 @@ test $? -eq 0
 # Add rpath for application so it can find the libraries
 #install_name_tool -add_rpath @executable_path/../Frameworks "$install/$APPNAME.app/Contents/MacOS/$APPNAME"
 
-# Copy our own plist and set correct version
-cp "$dir/Info.plist" "$install/$APPNAME.app/Contents/"
-sed -i '' -e "s#@OPENTRACK-VERSION@#$version#g" "$install/$APPNAME.app/Contents/Info.plist" 
-
-# Copy PkgInfo
-cp "$dir/PkgInfo" "$install/$APPNAME.app/Contents/"
-
-# Copy plugins
-mkdir -p "$install/$APPNAME.app/Contents/MacOS/Plugins"
-cp -r "$install/Plugins" "$install/$APPNAME.app/Contents/MacOS/"
-# Copy thirdparty dlls amd libs for usage of WINE
-cp -r "$install/thirdparty/" "$install/$APPNAME.app/Contents/MacOS/Plugins/"
-
-# Use either of these, two of them at the same time will break things!
-macdeployqt "$install/$APPNAME.app" -libpath="$install/Library"
-#sh "$dir/install-fail-tool" "$install/$APPNAME.app/Contents/Frameworks"
 
 # Create an 512 resolution size for the icon (for retina displays mostly)
 #gm convert -size 512x512 "$dir/../gui/images/opentrack.png" "$tmp/opentrack.png"
 convert "$dir/../gui/images/opentrack.png" -filter triangle -resize 512x512 "$tmp/opentrack.png"
+
+mkdir -p "$install/$APPNAME.app/Contents/Resources/"
 
 # Build iconset 
 mkdir "$tmp/$APPNAME.iconset" 
@@ -62,15 +49,41 @@ iconutil -c icns -o "$install/$APPNAME.app/Contents/Resources/$APPNAME.icns" "$t
 rm -rf "$tmp"
 
 
+# Copy our own plist and set correct version
+
+cp "$dir/Info.plist" "$install/$APPNAME.app/Contents/"
+sed -i '' -e "s#@OPENTRACK-VERSION@#$version#g" "$install/$APPNAME.app/Contents/Info.plist" 
+
+# Copy PkgInfo
+cp "$dir/PkgInfo" "$install/$APPNAME.app/Contents/"
+
+# Copy plugins
+mkdir -p "$install/$APPNAME.app/Contents/PlugIns"
+mkdir -p "$install/$APPNAME.app/Contents/MacOS/"
+
+
+cp -r "$install/Plugins/" "$install/$APPNAME.app/Contents/PlugIns/opentrack"
+# Copy thirdparty dlls amd libs for usage of WINE
+cp -r "$install/thirdparty/" "$install/$APPNAME.app/Contents/PlugIns/opentrack"
+
+# Use either of these, two of them at the same time will break things!
+macdeployqt "$install/$APPNAME.app" -libpath="$install/Library" -verbose=2
+#-verbose=2 -sign-for-notarization="$code_sign_identity" -dmg
+#sh "$dir/install-fail-tool" "$install/$APPNAME.app/Contents/Frameworks"
+
+
 if [ ! -d "$install/xplane" ]
 then
  mkdir -p "$install/xplane"
 fi
 
+#if you don't a dev certificate just use this:
+#codesign --force --deep --sign - "$install/$APPNAME.app"
 
-# Sign it to run it locally otherwise you'll get errors. Also I've noticed that
-# this makes the binaries also usable for other users. Otherwise macOS will complain very much.
-codesign --force --deep --sign - "$install/$APPNAME.app"
+codesign --force --deep --verify -vv --options runtime --timestamp --entitlements $dir/entitlements.plist --sign "$code_sign_identity" $install/$APPNAME.app
+
+
+find $install/xplane/ $install/doc/ $install/thirdparty/ -type f -exec codesign --force --verify -vv --options runtime --sign "$code_sign_identity" {} \;
 
 #Build DMG
 #https://github.com/andreyvit/create-dmg
@@ -100,3 +113,12 @@ else
    echo "Failed to create ${FILE}"
    exit 2
 fi
+
+#sign the dmg
+codesign --force -s "$code_sign_identity" $FILE
+
+#notarize
+#xcrun notarytool submit "$FILE" --apple-id appleid@example.com--team-id "TEAM_ID" --password "specific-app-password" --verbose --wait 
+
+#xcrun stapler staple -v "$FILE" 
+
