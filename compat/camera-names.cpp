@@ -11,9 +11,6 @@
 #   include <unistd.h>
 #endif
 
-#ifdef __APPLE__
-#   include <QCameraInfo>
-#endif
 
 #ifdef __linux__
 #   include <fcntl.h>
