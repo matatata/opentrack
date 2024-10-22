@@ -447,7 +447,7 @@ int XPluginEnable (void) {
         XCameraStatus = 1;		
     }
 
-    startTracking();
+    update_menu_items();
 
     return 1;
 }
