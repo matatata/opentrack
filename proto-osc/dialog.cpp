@@ -19,6 +19,8 @@ osc_dialog::osc_dialog() :
 
     tie_setting(s.address, ui.address);
     tie_setting(s.port, ui.port);
+    tie_setting(s.emitQuaternion,ui.quaternion);
+    tie_setting(s.emitHeadpose,ui.headpose);
     connect(ui.buttonBox, &QDialogButtonBox::accepted, this, &osc_dialog::doOK);
     connect(ui.buttonBox, &QDialogButtonBox::rejected, this, &osc_dialog::doCancel);
     connect(ui.address, &QLineEdit::textChanged, this, &osc_dialog::host_address_edited);

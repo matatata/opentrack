@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>284</width>
-    <height>102</height>
+    <height>198</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -81,6 +81,40 @@
        </property>
        <property name="maximum">
         <number>65535</number>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="opentrackHeadposeLabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QCheckBox" name="headpose">
+       <property name="toolTip">
+        <string>Sends x,y,z,yaw,pitch,roll</string>
+       </property>
+       <property name="text">
+        <string>/otr/headpose</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="bridgeQuaternionLabel">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QCheckBox" name="quaternion">
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sends a quaternion derived from pitch, yaw and roll (default)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>/bridge/quaternion</string>
        </property>
       </widget>
      </item>
