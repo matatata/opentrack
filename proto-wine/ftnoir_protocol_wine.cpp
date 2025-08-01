@@ -87,9 +87,9 @@ module_status wine::initialize()
         else { // System Wine
             #ifdef __APPLE__
             wine_path = findMacOsSystemWine();
-            #endif   
+            #endif
         }
-        
+
 
         // parse tilde if present
         if (wine_path[0] == '~')
@@ -103,6 +103,9 @@ module_status wine::initialize()
     }
     qDebug() << "proto/wine: wine_path:" << wine_path;
 
+#if APPLE
+    bool is_mac_crossover = wine_path.contains("CrossOver");
+#endif
 
     /////////////////////////////////////
     // determine environment variables //
@@ -155,12 +158,25 @@ module_status wine::initialize()
             wineprefix = qgetenv("HOME") + wineprefix.mid(1);
 
         // return error if relative path is given
-        if (wineprefix[0] != '/')
+        if (
+#if APPLE
+            ! is_mac_crossover &&
+#endif
+            wineprefix[0] != '/'
+        )
             return error(tr("Wine prefix must be an absolute path (given '%1')").arg(wineprefix));
 
         qDebug() << "proto/wine: wineprefix:" << wineprefix;
 
         env.insert("WINEPREFIX", wineprefix);
+#if APPLE
+        if(is_mac_crossover) {
+            if(wineprefix.contains("/"))
+              return error(tr("CrossOver prefix must be the Bottle name, not the whole path (given '%1')").arg(wineprefix));
+
+            env.insert("CX_BOTTLE", wineprefix);
+        }
+#endif
     }
 
     // ESYNC and FSYNC
@@ -215,7 +231,7 @@ QString wine::findMacOsSystemWine(){
         "/usr/local/bin/wine", // homebrew x86_64
         "/opt/homebrew/bin/wine" // homebrew arm64
     };
-    
+
     for ( const auto& file : commonWineInstallations )
     {
         qDebug() << "check macOS wine: " << file;
