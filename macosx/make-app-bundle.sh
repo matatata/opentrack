@@ -6,24 +6,24 @@ set -e
 # keep track of the last executed command
 trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 # echo an error message before exiting
-trap 'echo "--\n--\n--\n--\n\"${last_command}\" command exited with exit code $?."' EXIT 
+trap 'echo "--\n--\n--\n--\n\"${last_command}\" command exited with exit code $?."' EXIT
 
 APPNAME=opentrack
 # Alternative we could look at https://github.com/arl/macdeployqtfix ??
 
 #macosx directory
-dir="$1" 
-test -n "$dir" 
+dir="$1"
+test -n "$dir"
 # install directory
 install="$2"
-test -n "$install" 
+test -n "$install"
 version="$3"
 test -n "$version"
 code_sign_identity="${4:-"-"}"
 echo "Code-Sign-Identity is $code_sign_identity"
 osx_arch="${5:-'unknownarch'}"
 tmp="$(mktemp -d "/tmp/$APPNAME-tmp.XXXXXXX")"
-test $? -eq 0 
+test $? -eq 0
 
 
 # Add rpath for application so it can find the libraries
@@ -36,16 +36,16 @@ convert "$dir/../gui/images/opentrack.png" -filter triangle -resize 512x512 "$tm
 
 mkdir -p "$install/$APPNAME.app/Contents/Resources/"
 
-# Build iconset 
-mkdir "$tmp/$APPNAME.iconset" 
-sips -z 16 16     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_16x16.png" 
-sips -z 32 32     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_16x16@2x.png" 
-sips -z 32 32     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_32x32.png" 
-sips -z 64 64     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_32x32@2x.png" 
-sips -z 128 128   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_128x128.png" 
-sips -z 256 256   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_128x128@2x.png" 
-sips -z 512 512   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_256x256@2x.png" 
-sips -z 512 512   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_512x512.png" 
+# Build iconset
+mkdir "$tmp/$APPNAME.iconset"
+sips -z 16 16     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_16x16.png"
+sips -z 32 32     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_16x16@2x.png"
+sips -z 32 32     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_32x32.png"
+sips -z 64 64     "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_32x32@2x.png"
+sips -z 128 128   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_128x128.png"
+sips -z 256 256   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_128x128@2x.png"
+sips -z 512 512   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_256x256@2x.png"
+sips -z 512 512   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_512x512.png"
 iconutil -c icns -o "$install/$APPNAME.app/Contents/Resources/$APPNAME.icns" "$tmp/$APPNAME.iconset"
 rm -rf "$tmp"
 
@@ -53,7 +53,7 @@ rm -rf "$tmp"
 # Copy our own plist and set correct version
 
 cp "$dir/Info.plist" "$install/$APPNAME.app/Contents/"
-sed -i '' -e "s#@OPENTRACK-VERSION@#$version#g" "$install/$APPNAME.app/Contents/Info.plist" 
+sed -i '' -e "s#@OPENTRACK-VERSION@#$version#g" "$install/$APPNAME.app/Contents/Info.plist"
 
 # Copy PkgInfo
 cp "$dir/PkgInfo" "$install/$APPNAME.app/Contents/"
@@ -66,6 +66,7 @@ mkdir -p "$install/$APPNAME.app/Contents/MacOS/"
 cp -r "$install/Plugins/" "$install/$APPNAME.app/Contents/PlugIns/opentrack"
 # Copy thirdparty dlls amd libs for usage of WINE
 cp -r "$install/thirdparty/" "$install/$APPNAME.app/Contents/PlugIns/opentrack"
+cp -r "$install/thirdparty/" "$install/OtrWineBridge/libs"
 
 # Use either of these, two of them at the same time will break things!
 macdeployqt "$install/$APPNAME.app" -libpath="$install/Library"
@@ -110,21 +111,22 @@ create-dmg \
   --add-folder "Document" "$install/doc" 20 40 \
   --add-folder "Xplane-Plugin" "$install/xplane" 420 40 \
   --add-folder "thirdparty" "$install/thirdparty" 620 40 \
+  --add-folder "OtrWineBridge" "$install/OtrWineBridge" 220 40 \
   "$FILE" \
   "$install/$APPNAME.app"
 
 # Check if we have a DMG otherwise fail
 
 if [ -f "$FILE" ]; then
-  
+
   # sign the dmg if You have a proper developer certificate:
   if [ "$code_sign_identity" != "-" ]
   then
     codesign -vv --force -s "$code_sign_identity" "$FILE"
   fi
-  
+
   #To notarize do this:
-  #xcrun notarytool submit "$FILE" --apple-id appleid@example.com--team-id "TEAM_ID" --password "specific-app-password" --verbose --wait 
+  #xcrun notarytool submit "$FILE" --apple-id appleid@example.com--team-id "TEAM_ID" --password "specific-app-password" --verbose --wait
   #
   #xcrun stapler staple -v "$FILE"
 
