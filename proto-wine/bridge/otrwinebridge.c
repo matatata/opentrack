@@ -1,4 +1,4 @@
-#include "opentrack-wrapper-wine.h"
+#include "../opentrack-wrapper-wine.h"
 #include "resource.h"
 #include <windows.h>
 #include <stdint.h>
@@ -7,18 +7,23 @@
 #define SETTINGS_HKEY_PATH "Software\\OpentrackWineBridge"
 #define SETTING_CLEAR_REG_KEYS_ON_EXIT "clearRegistryKeysOnExit"
 #define SETTING_PROTOCOL "protocol"
+#define SETTING_CUSTOM_DLL_CHECKED "customDllChecked"
+#define SETTING_CUSTOM_DLL_LOC "customDllLoc"
 
 bool clearRegistryKeysOnExit = false;
+bool customDllChecked = false;
 
-#define IDC_BUTTON 666
-#define IDC_EDIT1 667
 
-HWND hEdit;
+#define IDB_CONFIGURE 666
+
+// HWND hEdit;
 HWND dialogHwnd;
 HWND mainHwnd;
-
 HBITMAP hBitmap;
 HMENU hMenu;
+
+char customDllLoc[MAX_PATH];
+
 
 bool readRegKey(char * key,char* subkey,int type,void *valPtr,DWORD bufSize){
     bool ok = false;
@@ -37,8 +42,7 @@ bool readRegKey(char * key,char* subkey,int type,void *valPtr,DWORD bufSize){
             case REG_SZ: //REG_SZ:
                 DWORD dataSize=0;
                 if (ERROR_SUCCESS == RegQueryValueExA(hkpath,  subkey,  NULL, NULL,NULL, &dataSize)) {
-                    const DWORD reqLength = dataSize / sizeof(WCHAR);
-                    if(reqLength <= bufSize &&
+                    if(dataSize <= bufSize &&
                         ERROR_SUCCESS == RegQueryValueExA(hkpath,  subkey, NULL,NULL, valPtr, &dataSize)) {
                         ok = true;
                     }
@@ -56,9 +60,7 @@ bool readRegKey(char * key,char* subkey,int type,void *valPtr,DWORD bufSize){
                 if (ERROR_SUCCESS == RegQueryValueExA(hkpath,  subkey, NULL, NULL, (LPBYTE)&val, &dataSize)) {
                     *((DWORD*)valPtr) = val;
                     ok = true;
-
-                    fprintf(stderr,"ok got value\n");
-
+                    // fprintf(stderr,"ok got value\n");
                 }
                 else {
                     fprintf(stderr,"Error reading\n");
@@ -99,7 +101,6 @@ void writeRegKey(char * key,char* subkey,int type,void *valPtr){
     }
 }
 
-
 bool readRegInt(char * key,char* subkey,DWORD *val){
     return readRegKey(key,subkey,REG_DWORD,val,sizeof(DWORD));
 }
@@ -109,7 +110,7 @@ void writeRegInt(char * key,char* subkey,DWORD value){
 }
 
 bool readRegString(char * key,char* subkey,char *value,int bufSize){
-    return readRegKey(key,subkey,REG_SZ,&value,bufSize);
+    return readRegKey(key,subkey,REG_SZ,value,bufSize);
 }
 
 void writeRegString(char * key,char* subkey,void *value){
@@ -138,48 +139,56 @@ DWORD WINAPI ThreadFunction(LPVOID lpParam) {
     return 0;
 }
 
-
-
-
 void CenterDialogOnOwner(HWND hwndDlg)
 {
-        // Get the owner window and dialog box rectangles.
-            HWND hwndOwner;
-            if ((hwndOwner = GetParent(hwndDlg)) == NULL)
-            {
-                hwndOwner = GetDesktopWindow();
-            }
+    HWND hwndOwner;
+    if ((hwndOwner = GetParent(hwndDlg)) == NULL)
+    {
+        hwndOwner = GetDesktopWindow();
+    }
 
-            RECT rc,rcOwner,rcDlg;
+    RECT rc,rcOwner,rcDlg;
 
-            GetWindowRect(hwndOwner, &rcOwner);
-            GetWindowRect(hwndDlg, &rcDlg);
-            CopyRect(&rc, &rcOwner);
+    GetWindowRect(hwndOwner, &rcOwner);
+    GetWindowRect(hwndDlg, &rcDlg);
+    CopyRect(&rc, &rcOwner);
+    OffsetRect(&rcDlg, -rcDlg.left, -rcDlg.top);
+    OffsetRect(&rc, -rc.left, -rc.top);
+    OffsetRect(&rc, -rcDlg.right, -rcDlg.bottom);
+    SetWindowPos(hwndDlg,
+                HWND_TOP,
+                rcOwner.left + (rc.right / 2),
+                rcOwner.top + (rc.bottom / 2),
+                0, 0,          // Ignores size arguments.
+                SWP_NOSIZE);
+}
 
-            // Offset the owner and dialog box rectangles so that right and bottom
-            // values represent the width and height, and then offset the owner again
-            // to discard space taken up by the dialog box.
 
-            OffsetRect(&rcDlg, -rcDlg.left, -rcDlg.top);
-            OffsetRect(&rc, -rc.left, -rc.top);
-            OffsetRect(&rc, -rcDlg.right, -rcDlg.bottom);
+void PlaceInCenterOfScreen(HWND window, DWORD style, DWORD exStyle) {
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    RECT clientRect;
+    GetClientRect(window, &clientRect);
+    AdjustWindowRectEx(&clientRect, style, FALSE, exStyle);
+    int clientWidth = clientRect.right - clientRect.left;
+    int clientHeight = clientRect.bottom - clientRect.top;
+    SetWindowPos(window, NULL, screenWidth / 2 - clientWidth / 2, screenHeight / 2 - clientHeight / 2, /*clientWidth, clientHeight, 0*/ 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
 
-            // The new position is the sum of half the remaining space and the owner's
-            // original position.
 
-            SetWindowPos(hwndDlg,
-                        HWND_TOP,
-                        rcOwner.left + (rc.right / 2),
-                        rcOwner.top + (rc.bottom / 2),
-                        0, 0,          // Ignores size arguments.
-                        SWP_NOSIZE);
+void UpdateCustomDllLoc(HWND hwndDlg){
+    char dllLoc[MAX_PATH];
+    SendMessage(GetDlgItem(hwndDlg, IDCK_DLL_OVERRIDE), BM_SETCHECK, customDllChecked ? BST_CHECKED : BST_UNCHECKED, 0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_DLL_LOC), EM_SETREADONLY, ! customDllChecked, 0);
 
-            // if (GetDlgCtrlID((HWND) wParam) != ID_ITEMNAME)
-            // {
-            //     SetFocus(GetDlgItem(hwndDlg, ID_ITEMNAME));
-            //     return FALSE;
-            // }
-
+    if(customDllChecked)
+    {
+        SetWindowText( GetDlgItem(hwndDlg,IDC_DLL_LOC), customDllLoc);
+    }
+    else if(getDllPath(dllLoc,sizeof(dllLoc)))
+    {
+        SetWindowText(GetDlgItem(hwndDlg,IDC_DLL_LOC), dllLoc);
+    }
 }
 
 // Dialog box procedure
@@ -198,72 +207,66 @@ INT_PTR CALLBACK DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
             DWORD protocol = getWineProtocol();
             SendMessage(hCombo, CB_SETCURSEL, (WPARAM)protocol-1, 0);
 
-
             // init checkbox
             if(!readRegInt(SETTINGS_HKEY_PATH,SETTING_CLEAR_REG_KEYS_ON_EXIT,(DWORD *)&clearRegistryKeysOnExit)){
                 fprintf(stderr,"could not read checkbox from registry");
             }
             SendMessage(GetDlgItem(hwndDlg, IDCK_REMOVE), BM_SETCHECK, clearRegistryKeysOnExit ? BST_CHECKED : BST_UNCHECKED, 0);
 
+            // init dll location
+            readRegString(SETTINGS_HKEY_PATH,SETTING_CUSTOM_DLL_LOC,customDllLoc,sizeof(customDllLoc));
+            readRegInt(SETTINGS_HKEY_PATH,SETTING_CUSTOM_DLL_CHECKED,(DWORD *)&customDllChecked);
+
+            UpdateCustomDllLoc(hwndDlg);
 
             CenterDialogOnOwner(hwndDlg);
-
-
             return TRUE;
         }
         case WM_COMMAND:
-            // if(LOWORD(wParam) == IDC_EDIT1){
-            //     switch (HIWORD(wParam)){
-            //         case EN_CHANGE:{
-            //             TCHAR buffer[256];
-            //             GetWindowText(GetDlgItem(hwndDlg,IDC_EDIT1), buffer, sizeof(buffer)/sizeof(buffer[0]));
-            //             // 'buffer' now contains the text from the edit control
-            //             fprintf(stderr,"text changed %s",buffer);
-
-            //          }break;
-
-            //     }
-            // }
+        {
+            if(LOWORD(wParam) == IDC_DLL_LOC){
+                if(HIWORD(wParam) == EN_CHANGE){
+                    if(customDllChecked){
+                        GetWindowText(GetDlgItem(hwndDlg,IDC_DLL_LOC), customDllLoc, sizeof(customDllLoc));
+                    }
+                }
+            }
 
             if(LOWORD(wParam) == IDCK_REMOVE){
                 clearRegistryKeysOnExit = IsDlgButtonChecked(hwndDlg, IDCK_REMOVE);
+            }
+
+            if(LOWORD(wParam) == IDCK_DLL_OVERRIDE){
+                customDllChecked = IsDlgButtonChecked(hwndDlg, IDCK_DLL_OVERRIDE);
+                UpdateCustomDllLoc(hwndDlg);
+            }
+
+            if(LOWORD(wParam) == IDOK)
+            {
                 writeRegInt(SETTINGS_HKEY_PATH,SETTING_CLEAR_REG_KEYS_ON_EXIT,clearRegistryKeysOnExit);
-            }
+                writeRegInt(SETTINGS_HKEY_PATH,SETTING_CUSTOM_DLL_CHECKED,customDllChecked);
 
-            if(LOWORD(wParam) == IDC_COMBO1){
-                switch (HIWORD(wParam))
-                {
-                    case CBN_SELCHANGE: {
-                        int index = SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0);
-                        if (index != CB_ERR) {
-                            int protocol = index+1;
-                            fprintf(stderr,"proto %i\n",protocol);
-                            writeRegInt(SETTINGS_HKEY_PATH,SETTING_PROTOCOL,protocol);
-                            createRegistryKeys(protocol,protocol);
-                        }
-                    } break;
+                int index = SendDlgItemMessage(hwndDlg, IDC_COMBO1, CB_GETCURSEL, 0, 0);
+                if (index != CB_ERR) {
+                    int protocol = index+1;
+                    writeRegInt(SETTINGS_HKEY_PATH,SETTING_PROTOCOL,protocol);
+                    createRegistryKeys(protocol,protocol);
                 }
-            }
-            break;
 
-         case WM_CLOSE:
+                writeRegString(SETTINGS_HKEY_PATH,SETTING_CUSTOM_DLL_LOC,customDllLoc);
+                EndDialog(hwndDlg, 0);
+            }
+
+            if(LOWORD(wParam) == IDCANCEL)
+            {
+                 EndDialog(hwndDlg, 0);
+            }
+        }
+        break;
+        case WM_CLOSE:
             EndDialog(hwndDlg, 0);
             hwndDlg = NULL;
-
-            char buf[MAX_PATH];
-            if(getDllPath(buf,MAX_PATH)){
-                SetWindowText( hEdit, buf );
-            }
-
-            break;
-        // case WM_DESTROY:
-        // fprintf(stderr,"DP WM_DESTROY\n");
-            // PostQuitMessage(0);
-            // break;
-
-
-
-
+        break;
         default:
             return DefWindowProc(hwndDlg, uMsg, wParam, lParam);
 
@@ -278,31 +281,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
       HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
 
     switch (uMsg) {
-
-        // case WM_QUIT:
-        //     fprintf(stderr,"WP WM_QUIT\n");
-        //     EndDialog(dialogHwnd, 0);
-        //     break;
         case WM_DESTROY:
-             fprintf(stderr,"WP WM_DESTROY\n");
-            //
-
              PostQuitMessage(0);
              DeleteObject(hBitmap);
              hBitmap = NULL;
              DestroyMenu(hMenu);
-            break;
+        break;
         case WM_CREATE:
-          hBitmap =  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP1));
-           if(!hBitmap)
-            MessageBox(0,"bmp not found!",0,0);
-                    //(HBITMAP)LoadImage(hInstance, "image.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
-            // Load the menu from the resource file
-            // HMENU hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU1));
-
-            // Attach the menu to the window
-            // SetMenu(hwnd, hMenu);
+            hBitmap =  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_BITMAP1));
 
             RECT wndRect;
             GetWindowRect(hwnd, &wndRect);
@@ -316,32 +302,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     100,        // Button width
                     20,        // Button height
                     hwnd,     // Parent window
-                    (HMENU)IDC_BUTTON,       // id.
+                    (HMENU)IDB_CONFIGURE,       // id.
                     hInstance,
                     NULL);      // Pointer not needed.
 
-            hEdit = CreateWindow(
-                "EDIT",                // Predefined class; Unicode assumed
-                "Read-only text",      // Text to display
-                WS_CHILD | WS_VISIBLE | WS_BORDER | ES_READONLY, // Styles
-                10, 10, 300, 20,        // Position and size
-                hwnd,             // Parent window
-                (HMENU)IDC_EDIT1,       // Control ID
-                hInstance,              // Instance handle
-                NULL                    // No additional data
-            );
-
-            // // Make the edit control read-only
-            // SendMessage(hEdit, EM_SETREADONLY, TRUE, 0);
-
-            // // Make it editable again
-            // SendMessage(hEdit, EM_SETREADONLY, FALSE, 0);
-
-             break;
-        //case WM_ERASEBKGND:
+        break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_BUTTON)
+            if (LOWORD(wParam) == IDB_CONFIGURE)
             {
                 DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), hwnd, DialogProc);
             }
@@ -357,57 +325,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HGDIOBJ         oldBitmap;
 
             hdc = BeginPaint(hwnd, &ps);
-
             hdcMem = CreateCompatibleDC(hdc);
             oldBitmap = SelectObject(hdcMem, hBitmap);
 
             GetObject(hBitmap, sizeof(bitmap), &bitmap);
             BitBlt(hdc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, hdcMem, 0, 0, SRCCOPY);
-
-
-            // Set text color and background mode
-            SetTextColor(hdc, RGB(0, 0, 0));       // Black text
-            SetBkMode(hdc, TRANSPARENT);           // Transparent background
-
-            // Define a rectangle for text formatting
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-            //rect.top = 50; // Add some top margin
-
-            // Draw centered text
-            char buf[MAX_PATH];
-            if(getDllPath(buf,MAX_PATH)){
-                DrawText(hdc,
-                    buf,
-                     -1,
-                     &rect,
-                     DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-            }
-
             SelectObject(hdcMem, oldBitmap);
             DeleteDC(hdcMem);
 
             EndPaint(hwnd, &ps);
-
-            fprintf(stderr,"Paint\n");
         break;
         default:
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 }
 
-
-
-void PlaceInCenterOfScreen(HWND window, DWORD style, DWORD exStyle) {
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-    RECT clientRect;
-    GetClientRect(window, &clientRect);
-    AdjustWindowRectEx(&clientRect, style, FALSE, exStyle);
-    int clientWidth = clientRect.right - clientRect.left;
-    int clientHeight = clientRect.bottom - clientRect.top;
-    SetWindowPos(window, NULL, screenWidth / 2 - clientWidth / 2, screenHeight / 2 - clientHeight / 2, /*clientWidth, clientHeight, 0*/ 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-}
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
@@ -435,9 +367,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         CLASS_NAME,
         "OpentrackWineBridge",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-         // | WS_MAXIMIZEBOX,
-   // WS_OVERLAPPEDWINDOW,
-
         CW_USEDEFAULT, CW_USEDEFAULT,
         320, 193+25,
         NULL, NULL, hInstance, NULL
@@ -450,7 +379,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     UpdateWindow(mainHwnd);
     PlaceInCenterOfScreen(mainHwnd,0,0);
     ShowWindow(mainHwnd, nCmdShow);
-
 
 
     HANDLE hThread = CreateThread(

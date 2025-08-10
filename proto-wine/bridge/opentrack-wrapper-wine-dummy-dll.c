@@ -1,4 +1,4 @@
-#include "opentrack-wrapper-wine.h"
+#include "../opentrack-wrapper-wine.h"
 
 #include <windows.h>
 #include <stdio.h>

@@ -66,16 +66,25 @@ mkdir -p "$install/$APPNAME.app/Contents/MacOS/"
 cp -r "$install/Plugins/" "$install/$APPNAME.app/Contents/PlugIns/opentrack"
 # Copy thirdparty dlls amd libs for usage of WINE
 cp -r "$install/thirdparty/" "$install/$APPNAME.app/Contents/PlugIns/opentrack"
-cp -r "$install/thirdparty/" "$install/OtrWineBridge/libs"
+if [ -d "$install/OtrWineBridge" ]
+then
+    cp -r "$install/thirdparty/" "$install/OtrWineBridge/libs"
+fi
 
 # Use either of these, two of them at the same time will break things!
 macdeployqt "$install/$APPNAME.app" -libpath="$install/Library"
 #sh "$dir/install-fail-tool" "$install/$APPNAME.app/Contents/Frameworks"
 
+if [ ! -d "$install/OtrWineBridge" ]
+then
+ mkdir -p "$install/OtrWineBridge"
+ echo "This module has not been built." > "$install/OtrWineBridge/README.txt"
+fi
 
 if [ ! -d "$install/xplane" ]
 then
  mkdir -p "$install/xplane"
+ echo "This module has not been built." > "$install/xplane/README.txt"
 fi
 
 if [ "$code_sign_identity" = "-" ]
@@ -109,7 +118,7 @@ create-dmg \
   --hide-extension "$APPNAME.app" \
   --no-internet-enable \
   --add-folder "Document" "$install/doc" 20 40 \
-  --add-folder "Xplane-Plugin" "$install/xplane" 420 40 \
+  --add-folder "XPlane-Plugin" "$install/xplane" 420 40 \
   --add-folder "thirdparty" "$install/thirdparty" 620 40 \
   --add-folder "OtrWineBridge" "$install/OtrWineBridge" 220 40 \
   "$FILE" \
