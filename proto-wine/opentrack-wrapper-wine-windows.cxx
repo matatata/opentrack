@@ -17,6 +17,25 @@
 
 using std::strcat;
 
+bool get_dll_path(char *dir,uint32_t bufSize)
+{
+    if (GetCurrentDirectoryA(bufSize, dir) < bufSize)
+    {
+        for (int i = 0; dir[i]; i++)
+            if (dir[i] == '\\')
+                dir[i] = '/';
+        // there's always a leading and trailing slash
+        #if DLL
+        strcat(dir, "/libs/");
+        #else
+        strcat(dir, OPENTRACK_LIBRARY_PATH);
+        #endif
+        //strcat(dir, "/");
+        return TRUE;
+    }
+    return FALSE;
+}
+
 /**
  * path = false removes values from the registry
  */
@@ -24,7 +43,7 @@ static void write_path(const char* key, const char* subkey, bool path)
 {
     char dir[8192] {};
 
-    if (GetCurrentDirectoryA(8192, dir) < 8190)
+    if (get_dll_path(dir,8192))
     {
         HKEY hkpath;
         if (RegCreateKeyExA(HKEY_CURRENT_USER,
@@ -37,16 +56,6 @@ static void write_path(const char* key, const char* subkey, bool path)
                             &hkpath,
                             NULL) == ERROR_SUCCESS)
         {
-            for (int i = 0; dir[i]; i++)
-                if (dir[i] == '\\')
-                    dir[i] = '/';
-            // there's always a leading and trailing slash
-            #if DLL
-            strcat(dir, "/libs/");
-            #else
-            strcat(dir, OPENTRACK_LIBRARY_PATH);
-            #endif
-            //strcat(dir, "/");
             if (!path)
                 dir[0] = '\0';
             (void) RegSetValueExA(hkpath, subkey, 0, REG_SZ, (BYTE*) dir, strlen(dir) + 1);

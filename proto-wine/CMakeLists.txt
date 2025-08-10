@@ -48,7 +48,6 @@ if(NOT WIN32)
                 OUTPUT otrwinebridge.exe otrwinebridge.rc.o
                 COMMAND x86_64-w64-mingw32-windres "${CMAKE_CURRENT_SOURCE_DIR}/bridge/otrwinebridge.rc" -o otrwinebridge.rc.o
                 COMMAND x86_64-w64-mingw32-gcc -fno-permissive -mwindows  -Wl,-Bdynamic -L./fakedll/ -lopentrack-wrapper-wine "${CMAKE_CURRENT_SOURCE_DIR}/bridge/otrwinebridge.c" otrwinebridge.rc.o -I "${CMAKE_CURRENT_SOURCE_DIR}/bridge/"  -o otrwinebridge.exe
-                COMMAND x86_64-w64-mingw32-gcc -fno-permissive -mwindows  -Wl,-Bdynamic -L./fakedll/ -lopentrack-wrapper-wine "${CMAKE_CURRENT_SOURCE_DIR}/bridge/otrwinebridge.c" otrwinebridge.rc.o -I "${CMAKE_CURRENT_SOURCE_DIR}/bridge/"  -o otrwinebridge.exe
                 )
                 add_custom_target(wine-wrapper DEPENDS opentrack-wrapper-wine.exe.so winelib/opentrack-wrapper-wine.dll.so fakedll/opentrack-wrapper-wine.dll otrwinebridge.exe)
                 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/winelib/opentrack-wrapper-wine.dll" "${CMAKE_CURRENT_SOURCE_DIR}/bridge/README.txt" "${CMAKE_CURRENT_BINARY_DIR}/otrwinebridge.exe" DESTINATION ${CMAKE_INSTALL_PREFIX}/OtrWineBridge/)

@@ -16,6 +16,7 @@ enum Axis {
 #include "wine-shm.h"
 
 void create_registry_key(int32_t selection);
+bool get_dll_path(char *dir,uint32_t bufSize);
 
 class ShmPosix {
 public:
@@ -52,15 +53,24 @@ WINAPI void quit() {
 }
 extern "C"
 WINAPI void createRegistryKeys(int32_t x,int32_t selection){
-    fprintf(stderr,"got x=%i sel=%i\n",x,selection);
     create_registry_key(selection);
 }
+
 extern "C"
 WINAPI void clearRegistryKeys(){
     create_registry_key(-1);
 }
+
+
+
 extern "C"
-WINAPI int otrdllmain(int protocol) {
+WINAPI int getDllPath(char *dir,uint32_t bufSize){
+    return get_dll_path(dir,bufSize);
+
+}
+
+extern "C"
+WINAPI int mainloop(int protocol) {
 #else
 int main(void) {
     int protocol = 0; // use env OTR_WINE_PROTO
@@ -84,6 +94,7 @@ int main(void) {
         if (shm_posix->stop) {
             #if DLL
                 (void) Sleep(1000);
+                continue;
             #else
                 break;
             #endif

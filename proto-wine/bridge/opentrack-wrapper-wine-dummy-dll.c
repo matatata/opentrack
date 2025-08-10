@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
 
 static bool running = true;
 
@@ -13,7 +14,7 @@ static bool running = true;
     running = false;
  }
 
- __declspec(dllexport) int otrdllmain(int protocol){
+ __declspec(dllexport) int mainloop(int protocol){
     MessageBox(NULL, "Start Processing", LABEL, MB_OK);
     while(running){
         Sleep(1000);
@@ -23,10 +24,17 @@ static bool running = true;
 
 
 __declspec(dllexport)  void createRegistryKeys(int32_t x, int32_t selection) {
-    fprintf(stderr,"proto %i",selection);
-    //MessageBox(NULL, "Writing keys", LABEL, MB_OK);
+    MessageBox(NULL, "Writing keys", LABEL, MB_OK);
 }
 
 __declspec(dllexport)  void clearRegistryKeys() {
     MessageBox(NULL, "Clearing keys", LABEL, MB_OK);
 }
+
+
+__declspec(dllexport)  bool getDllPath(char *dir,unsigned int bufSize){
+    unsigned int req = strlen("Hello");
+    if(req < bufSize)
+        strcpy(dir,"Hello");
+}
+
