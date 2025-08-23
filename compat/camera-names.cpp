@@ -127,8 +127,7 @@ std::vector<std::tuple<QString, int>> get_camera_names()
             close(fd);
         }
     }
-#endif
-#ifdef __APPLE__
+#elif defined __APPLE__
     for (const QString& camName : apple_get_camera_names())
         ret.push_back({ camName, ret.size() });
 #endif
