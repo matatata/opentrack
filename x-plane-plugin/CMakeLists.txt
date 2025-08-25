@@ -3,6 +3,8 @@ if(LINUX OR APPLE)
 
     if(SDK_XPLANE)
         if (APPLE)
+            # we can build this as universal binary:
+            set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
             otr_module(xplane-plugin NO-QT NO-INSTALL)
         else()
             otr_module(xplane-plugin NO-QT)
@@ -19,11 +21,11 @@ if(LINUX OR APPLE)
             target_link_options(${self} PRIVATE
                                 "-F${SDK_XPLANE}/Libraries/Mac/"
                                 -framework XPLM)
-                                
+
            install(TARGETS "${self}"
                 RUNTIME DESTINATION ${opentrack-bin}/xplane
                 BUNDLE	DESTINATION ${opentrack-bin}/xplane
-                LIBRARY DESTINATION ${opentrack-bin}/xplane 
+                LIBRARY DESTINATION ${opentrack-bin}/xplane
                 PERMISSIONS ${opentrack-perms-exec})
 
         elseif(CMAKE_COMPILER_IS_GNUCXX)
@@ -35,14 +37,8 @@ if(LINUX OR APPLE)
             target_link_options(${self} PRIVATE -undefined_warning)
         endif()
 
-        if(CMAKE_OSX_ARCHITECTURES)
-            set(PLUGIN_FILE_NAME "opentrack_${CMAKE_OSX_ARCHITECTURES}")
-        else()
-            set(PLUGIN_FILE_NAME "opentrack")
-        endif()
-        
         set_target_properties(${self} PROPERTIES
-            LIBRARY_OUTPUT_NAME "${PLUGIN_FILE_NAME}.xpl"
+            LIBRARY_OUTPUT_NAME "opentrack.xpl"
             PREFIX "" SUFFIX "")
 
         if(UNIX AND NOT APPLE)
