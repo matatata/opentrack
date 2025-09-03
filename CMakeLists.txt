@@ -133,3 +133,6 @@ foreach(k "" "_${CMAKE_BUILD_TYPE}")
     message("   STATIC${k}: ${CMAKE_STATIC_LINKER_FLAGS${k}}")
 endforeach()
 message("--")
+
+add_subdirectory(freetrackclient)
+add_subdirectory(contrib/npclient)
