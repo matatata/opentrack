@@ -136,3 +136,4 @@ message("--")
 
 add_subdirectory(freetrackclient)
 add_subdirectory(contrib/npclient)
+add_subdirectory(otrwinebridge)
