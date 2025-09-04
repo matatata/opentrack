@@ -12,9 +12,10 @@ include_guard(GLOBAL)
 if(APPLE)
     set(opentrack-libexec "Plugins")
     set(opentrack-runtime-libexec "/../PlugIns/opentrack/")                        # MUST HAVE A TRAILING BACKSLASH, Used in APP
-    set(opentrack-runtime-doc "/")                         # MUST HAVE A TRAILING BACKSLASH
+    set(opentrack-runtime-doc "/../Resources/")                         # MUST HAVE A TRAILING BACKSLASH
     set(opentrack-bin "${CMAKE_INSTALL_PREFIX}")
     set(opentrack-doc "doc")
+    set(opentrack-game-csv-doc "opentrack.app/Contents/Resources") # settings/freetracknoir supported games.csv goes here
     set(opentrack-i18n "opentrack.app/Contents/Resources") # used during install
     set(opentrack-runtime-i18n "../Resources/i18n") # used in application
     set(opentrack-install-rpath "${CMAKE_INSTALL_PREFIX}/Library")
@@ -24,6 +25,7 @@ elseif(WIN32)
     set(opentrack-runtime-doc "/doc/")                     # MUST HAVE A TRAILING BACKSLASH
     set(opentrack-bin ".")
     set(opentrack-doc "doc")
+    set(opentrack-game-csv-doc "doc")  # settings/freetracknoir supported games.csv goes here
     set(opentrack-i18n "i18n")
     set(opentrack-runtime-i18n "./i18n")
     set(opentrack-debug "debug")
@@ -34,6 +36,7 @@ else()
     set(opentrack-runtime-doc "/../share/doc/opentrack/")         # MUST HAVE A TRAILING BACKSLASH
     set(opentrack-bin "bin")
     set(opentrack-doc "share/doc/opentrack")
+    set(opentrack-game-csv-doc "share/doc/opentrack")  # settings/freetracknoir supported games.csv goes here
     set(opentrack-install-rpath "${CMAKE_INSTALL_PREFIX}/${opentrack-libexec}")
     set(opentrack-i18n "share/opentrack/i18n")
     set(opentrack-runtime-i18n "../share/opentrack/i18n")

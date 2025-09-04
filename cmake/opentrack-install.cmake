@@ -27,7 +27,8 @@ function(cleanup_visual_studio_debug)
 endfunction()
 
 otr_install_dir("${opentrack-doc}" "3rdparty-notices")
-otr_install_dir("${opentrack-doc}" "settings" "${CMAKE_SOURCE_DIR}/contrib")
+otr_install_dir("${opentrack-doc}" "${CMAKE_SOURCE_DIR}/contrib")
+otr_install_dir("${opentrack-game-csv-doc}" "settings")
 otr_install_dir("${opentrack-libexec}" "presets")
 
 if(WIN32)
