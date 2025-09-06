@@ -15,7 +15,8 @@ enum Axis {
 #include "compat/shm.h"
 #include "wine-shm.h"
 
-void create_registry_key(void);
+void create_registry_key(int32_t selection);
+bool get_dll_path(char *dir,uint32_t bufSize);
 
 class ShmPosix {
 public:
@@ -43,8 +44,38 @@ private:
     void *hMutex, *hMapFile;
 };
 
-int main(void)
-{
+static bool running = true;
+
+#if DLL
+extern "C"
+WINAPI void quit() {
+    running = false;
+}
+extern "C"
+WINAPI void createRegistryKeys(int32_t x,int32_t selection){
+    create_registry_key(selection);
+}
+
+extern "C"
+WINAPI void clearRegistryKeys(){
+    create_registry_key(-1);
+}
+
+
+
+extern "C"
+WINAPI int getDllPath(char *dir,uint32_t bufSize){
+    return get_dll_path(dir,bufSize);
+
+}
+
+extern "C"
+WINAPI int mainloop(int protocol) {
+#else
+int main(void) {
+    int protocol = 0; // use env OTR_WINE_PROTO
+#endif
+
     ShmPosix lck_posix(WINE_SHM_NAME, WINE_MTX_NAME, sizeof(WineSHM));
     ShmWine lck_wine("FT_SharedMem", "FT_Mutext", sizeof(FTHeap));
     if(!lck_posix.success()) {
@@ -58,10 +89,16 @@ int main(void)
     WineSHM* shm_posix = (WineSHM*) lck_posix.ptr();
     FTHeap* shm_wine = (FTHeap*) lck_wine.ptr();
     FTData* data = &shm_wine->data;
-    create_registry_key();
-    while (1) {
-        if (shm_posix->stop)
-            break;
+    create_registry_key(protocol);
+    while (running) {
+        if (shm_posix->stop) {
+            #if DLL
+                (void) Sleep(1000);
+                continue;
+            #else
+                break;
+            #endif
+        }
         data->Yaw = -shm_posix->data[Yaw];
         data->Pitch = -shm_posix->data[Pitch];
         data->Roll = shm_posix->data[Roll];
@@ -77,4 +114,5 @@ int main(void)
             shm_wine->table[i] = shm_posix->table[i];
         (void) Sleep(4);
     }
+    return 0;
 }

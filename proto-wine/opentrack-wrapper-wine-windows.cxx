@@ -17,11 +17,33 @@
 
 using std::strcat;
 
+bool get_dll_path(char *dir,uint32_t bufSize)
+{
+    if (GetCurrentDirectoryA(bufSize, dir) < bufSize)
+    {
+        for (int i = 0; dir[i]; i++)
+            if (dir[i] == '\\')
+                dir[i] = '/';
+        // there's always a leading and trailing slash
+        #if DLL
+        strcat(dir, "/libs/");
+        #else
+        strcat(dir, OPENTRACK_LIBRARY_PATH);
+        #endif
+        //strcat(dir, "/");
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/**
+ * path = false removes values from the registry
+ */
 static void write_path(const char* key, const char* subkey, bool path)
 {
     char dir[8192] {};
 
-    if (GetCurrentDirectoryA(8192, dir) < 8190)
+    if (get_dll_path(dir,8192))
     {
         HKEY hkpath;
         if (RegCreateKeyExA(HKEY_CURRENT_USER,
@@ -34,12 +56,6 @@ static void write_path(const char* key, const char* subkey, bool path)
                             &hkpath,
                             NULL) == ERROR_SUCCESS)
         {
-            for (int i = 0; dir[i]; i++)
-                if (dir[i] == '\\')
-                    dir[i] = '/';
-            // there's always a leading and trailing slash
-            strcat(dir, OPENTRACK_LIBRARY_PATH);
-            //strcat(dir, "/");
             if (!path)
                 dir[0] = '\0';
             (void) RegSetValueExA(hkpath, subkey, 0, REG_SZ, (BYTE*) dir, strlen(dir) + 1);
@@ -48,21 +64,28 @@ static void write_path(const char* key, const char* subkey, bool path)
     }
 }
 
-void create_registry_key(void)
+/**
+ * selection 1=freetrack, 2=NPClient 3=Both, 0 = look for OTR_WINE_PROTO env variable
+ * -1 == erase keys
+ */
+void create_registry_key(int32_t selection)
 {
     bool use_freetrack, use_npclient;
-    const char* env = getenv("OTR_WINE_PROTO");
-    char* endptr;
-    if (!env) env = "";
-    int selection = strtol(env, &endptr, 10);
-    if (*endptr)
-        selection = 0;
+    if(selection==0) {
+        const char* env = getenv("OTR_WINE_PROTO");
+        char* endptr;
+        if (!env) env = "";
+        selection = strtol(env, &endptr, 10);
+        if (*endptr)
+            selection = 0;
+    }
 
     switch (selection)
     {
-    default: std::exit(EX_USAGE);
+    case -1: use_freetrack = false, use_npclient = false; break;
     case 1: use_freetrack = true, use_npclient = false; break;
     case 2: use_freetrack = false, use_npclient = true; break;
+    default:
     case 3: use_freetrack = true, use_npclient = true; break;
     }
 
