@@ -1,4 +1,4 @@
-#include "RegistryHelper.h"
+#include "registryhelper.h"
 #include <iostream>
 #include <vector>
 

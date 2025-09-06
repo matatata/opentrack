@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "RegistryHelper.h"
+#include "registryhelper.h"
 #include "utils.h"
 
 using namespace std;

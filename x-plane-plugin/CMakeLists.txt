@@ -8,10 +8,10 @@ if(LINUX OR APPLE)
         if (APPLE)
             # we can build this as universal binary:
             set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
-            otr_module(xplane-plugin NO-QT NO-INSTALL)
-        else()
-            otr_module(xplane-plugin NO-QT)
         endif()
+
+        otr_module(xplane-plugin NO-QT NO-INSTALL)
+        
         # probably librt already included
         #install(FILES ${opentrack-xplane-plugin-c} DESTINATION "opentrack-libexec")
         target_include_directories(opentrack-xplane-plugin SYSTEM PUBLIC ${SDK_XPLANE}/CHeaders/XPLM)

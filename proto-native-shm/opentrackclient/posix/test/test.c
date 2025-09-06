@@ -20,6 +20,8 @@ f_funci funci  = NULL;
 
 #ifdef LINK_DEPENDENT
 
+OTRInit();
+
 funci = &OTRGetHeadpose;
 
 #else
@@ -69,5 +71,7 @@ funci = &OTRGetHeadpose;
     }
 
 
-
+#ifdef LINK_DEPENDENT
+    OTRClose();
+#endif
 }
