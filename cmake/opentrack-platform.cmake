@@ -168,3 +168,12 @@ endif()
 if(LINUX AND CMAKE_COMPILER_IS_CLANG)
     link_libraries(atomic)
 endif()
+
+# needed for matatata's stuff for wine
+if(LINUX OR APPLE)
+    set(SDK_WINE_PATH "" CACHE PATH "Where did you clone the wine repo?")
+    find_program(MINGW_GCC_COMPILER64 x86_64-w64-mingw32-gcc)
+    find_program(MINGW_GCC_COMPILER i686-w64-mingw32-gcc)
+    find_program(MINGW_GPP_COMPILER64 x86_64-w64-mingw32-g++)
+    find_program(MINGW_GPP_COMPILER i686-w64-mingw32-g++)
+endif()

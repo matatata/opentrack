@@ -8,6 +8,7 @@ if(APPLE)
                                         \"${instdir}\"
                                        \"${commit}\"
                                        \"${CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY}\"
-                                       \"${CMAKE_OSX_ARCHITECTURES}\")
+                                       \"${CMAKE_OSX_ARCHITECTURES}\"
+                                       \"${MACDEPLOYQT_EXECUTABLE}\")
     ")
 endif()

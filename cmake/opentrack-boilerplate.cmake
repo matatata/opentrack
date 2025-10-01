@@ -227,9 +227,15 @@ function(otr_module n_)
                 install(TARGETS "${n}"
                 RUNTIME DESTINATION "${opentrack-bin}"
                 BUNDLE	DESTINATION "${opentrack-bin}"
-                LIBRARY DESTINATION "${opentrack-bin}/Library"
-                RESOURCE DESTINATION "${opentrack-bin}/opentrack.app/Resource"
+                LIBRARY DESTINATION "${opentrack-bin}/opentrack.app/Contents/Frameworks"
+                RESOURCE DESTINATION "${opentrack-bin}/opentrack.app/contents/Resources"
                 PERMISSIONS ${opentrack-perms-exec})
+
+                set_target_properties( ${n}
+                    PROPERTIES
+                    LIBRARY_OUTPUT_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:opentrack-executable>/Frameworks"
+                )
+
             else()
                 install(TARGETS "${n}"
                     RUNTIME DESTINATION "${opentrack-bin}"
@@ -238,10 +244,23 @@ function(otr_module n_)
             endif()
         else()
             # Plugins
-            install(TARGETS "${n}"
+
+            if(APPLE)
+                 install(TARGETS "${n}"
                     RUNTIME DESTINATION "${opentrack-libexec}"
                     LIBRARY DESTINATION "${opentrack-libexec}"
                     PERMISSIONS ${opentrack-perms-exec})
+                set_target_properties( ${n}
+                    PROPERTIES
+                    LIBRARY_OUTPUT_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:opentrack-executable>/PlugIns/opentrack"
+                )
+            else()
+                install(TARGETS "${n}"
+                    RUNTIME DESTINATION "${opentrack-libexec}"
+                    LIBRARY DESTINATION "${opentrack-libexec}"
+                    PERMISSIONS ${opentrack-perms-exec})
+            endif()
+
         endif()
 
         if(MSVC)
