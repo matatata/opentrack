@@ -15,7 +15,11 @@
  * *                                                                                *
  * *                                                                                *
  * * The FreeTrackClient sources were translated from the original Delphi sources   *
- * * created by the FreeTrack developers.                                           *
+ * * created by the FreeTrack developers.
+ *
+ *
+ * * September 2025: The Wine unix calls were added
+ * * by matatata https://github.com/matatata/opentrack                                       *
  */
 
 #ifdef __GNUC__
@@ -24,31 +28,67 @@
 #endif
 
 #include <string.h>
-#include <windows.h>
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
 
 #include "fttypes.h"
 
 #if defined _MSC_VER && !defined _WIN64
 #   define FT_EXPORT(t) t __stdcall
 #else
-#   define FT_EXPORT(t) __declspec(dllexport) t
+#   define FT_EXPORT(t) __declspec(dllexport) t __stdcall
 #endif
 
-
-#if 0
+#if DEBUG
 #   include <stdio.h>
-static FILE *debug_stream = fopen("c:\\FreeTrackClient.log", "a");
+static FILE *debug_stream = 0;
 #   define dbg_report(...) if (debug_stream) { fprintf(debug_stream, __VA_ARGS__); fflush(debug_stream); }
 #else
 #define dbg_report(...) ((void)0)
 #endif
-
+#ifdef FT_WINE_UNIX_LIB
+#include "freetrackclient_wine_unixlib.h"
+#else
 static HANDLE hFTMemMap = 0;
 static FTHeap* ipc_heap = 0;
 static HANDLE ipc_mutex = 0;
+#endif
 static const char* dllVersion = "1.0.0.0";
 static const char* dllProvider = "FreeTrack";
 
+
+BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void *reserved)
+{
+    if (reason == DLL_PROCESS_ATTACH)
+    {
+        #if DEBUG
+        debug_stream = fopen("c:\\FreeTrackClient.log", "a");
+        #endif
+
+        dbg_report("DLL_PROCESS_ATTACH\n");
+#ifdef FT_WINE_UNIX_LIB
+        if(__wine_init_unix_call()){
+            dbg_report("__wine_init_unix_call failed\n");
+            return FALSE;
+        }
+#endif
+        DisableThreadLibraryCalls(instance);
+    }
+    else if(reason == DLL_PROCESS_DETACH){
+        dbg_report("DLL_PROCESS_DETACH\n");
+    }
+    return TRUE;
+}
+
+#ifdef FT_WINE_UNIX_LIB
+FT_EXPORT(int) OpentrackUnixLibVersion()
+{
+    return 1;
+}
+#else
 static BOOL impl_create_mapping(void)
 {
     if (ipc_heap != NULL)
@@ -66,12 +106,18 @@ static BOOL impl_create_mapping(void)
 
     ipc_heap = (FTHeap*) MapViewOfFile(hFTMemMap, FILE_MAP_WRITE, 0, 0, sizeof(FTHeap));
     ipc_mutex = CreateMutexA(NULL, FALSE, FREETRACK_MUTEX);
-
     return TRUE;
 }
+#endif
+
+
 
 FT_EXPORT(BOOL) FTGetData(FTData* data)
 {
+#ifdef FT_WINE_UNIX_LIB
+    // no lazy initialization, we already initialized otrclient in DllMain
+    return WINE_UNIX_CALL(ft_get_data,(void*)data);
+#else
     if (impl_create_mapping() == FALSE)
         return FALSE;
 
@@ -82,6 +128,7 @@ FT_EXPORT(BOOL) FTGetData(FTData* data)
         ReleaseMutex(ipc_mutex);
     }
     return TRUE;
+#endif
 }
 
 /*

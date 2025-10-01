@@ -3,10 +3,10 @@
 #include "api/plugin-api.hpp"
 #include "compat/shm.h"
 
-// We share the same memory-layout used by the wine-proto
-#include "proto-wine/wine-shm.h"
+// no we have our own now:
+#include "freetrackclient_posix_private.h"
 
-#include "ui_ftnoir_shmcontrols.h"
+#include "ui_ftnoir_ftxcontrols.h"
 
 #include "options/options.hpp"
 using namespace options;
@@ -20,17 +20,17 @@ using namespace options;
 
 struct settings : opts
 {
-    settings() : opts{"proto-native-shm"} {}
+    settings() : opts{"proto-freetrack-posix"} {}
 
 };
 
-class native_shm : TR, public IProtocol
+class freetrackx : TR, public IProtocol
 {
     Q_OBJECT
 
 public:
-    native_shm();
-    ~native_shm() override;
+    freetrackx();
+    ~freetrackx() override;
 
     module_status initialize() override;
     void pose(const double* headpose, const double*) override;
@@ -41,8 +41,8 @@ public:
         return connected_game;
     }
 private:
-    shm_wrapper lck_shm { WINE_SHM_NAME, WINE_MTX_NAME, sizeof(WineSHM) };
-    WineSHM* shm = nullptr;
+    shm_wrapper lck_shm { FTX_SHM_NAME, FTX_MTX_NAME, sizeof(FTPosixSHM) };
+    FTPosixSHM* shm = nullptr;
     settings s;
     int gameid = 0;
     QString connected_game;
@@ -67,11 +67,11 @@ private slots:
     void doCancel();
 };
 
-class wine_metadata : public Metadata
+class ftx_metadata : public Metadata
 {
     Q_OBJECT
 
 public:
-    QString name() override { return tr("Opentrack Shared Memory"); }
-    QIcon icon() override { return QIcon(":/images/opentrack.png"); }
+    QString name() override { return tr("freetrack 2.0 Posix"); }
+    QIcon icon() override { return QIcon(":/images/freetrack.png"); }
 };

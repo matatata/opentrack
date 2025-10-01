@@ -27,6 +27,10 @@ function(otr_init_variant)
         "video"
         "video-*"
         "opentrack"
+        "freetrackclient-posix"
+        "freetrackclient"
+        "contrib/npclient"
+        "ftnoir_registry_tool"
     )
     set_property(GLOBAL PROPERTY opentrack-subprojects "${subprojects}")
 endfunction()

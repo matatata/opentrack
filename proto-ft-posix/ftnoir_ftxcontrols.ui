@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UICFTControls</class>
+ <widget class="QWidget" name="UICFTControls">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1297</width>
+    <height>488</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Opentrack</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="ftx-protocol.qrc">
+    <normaloff>:/images/freetrack.png</normaloff>:/images/freetrack.png</iconset>
+  </property>
+  <property name="layoutDirection">
+   <enum>Qt::LeftToRight</enum>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>freetrack 2.0 Posix</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This module is used for native clients such as opentrack's X-Plane plugin which is using the &lt;span style=&quot; font-weight:704;&quot;&gt;freetrackclient library&lt;/span&gt;.&lt;br/&gt;This resembles how freetrack and other popular headtracking solutions are integrated in games in the Windows eco-system.&lt;br/&gt;AFAIK there's nothing like that for macOS nor Linux which is why I created it in order to facilitate bringing&lt;br/&gt;native headtracking via opentrack to native macOS games.&lt;/p&gt;&lt;p&gt;The module should also be used for the usage with windows games running on macOS or Linux via &lt;a href=&quot;https://www.winehq.org&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;wine&lt;/span&gt;&lt;/a&gt; based solutions such as &lt;a href=&quot;https://www.codeweavers.com/crossover&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;CrossOver&lt;/span&gt;&lt;/a&gt; , &lt;a href=&quot;https://github.com/Sikarugir-App/Sikarugir&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;Sikarugir&lt;/span&gt;&lt;/a&gt; or Proton in Steam.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Important:&lt;/span&gt; For this to work you need to install the so called builtin winelib dlls which are provided by opentrack as well. See &lt;a href=&quot;https://matatata.github.io/OpentrackWine.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#007af4;&quot;&gt;https://matatata.github.io/OpentrackWine.html&lt;/span&gt;&lt;/a&gt; for more instructions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::NoButton</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="ftx-protocol.qrc"/>
+ </resources>
+ <connections/>
+ <slots>
+  <slot>startEngineClicked()</slot>
+  <slot>stopEngineClicked()</slot>
+  <slot>cameraSettingsClicked()</slot>
+ </slots>
+</ui>

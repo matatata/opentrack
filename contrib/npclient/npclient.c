@@ -7,7 +7,17 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <windows.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winternl.h"
+
+
+#ifdef NP_WINE_UNIX_LIB
+#include "npclient_wine_unixlib.h"
+#endif
+
 
 #define FREETRACK_MUTEX "FT_Mutext"
 #define FT_MM_DATA "FT_SharedMem"
@@ -61,40 +71,28 @@ static void FTDestroyMapping(void);
 static __inline double clamp(double x, double xmin, double xmax);
 static __inline double clamp_(double x);
 
+#define DEBUG 1
+
 #if DEBUG
 static FILE *debug_stream;
 #define dbg_report(...) do { if (debug_stream) { fprintf(debug_stream, __VA_ARGS__); fflush(debug_stream); } } while(0);
 #else
 #define dbg_report(...)
 #endif
-
-typedef enum npclient_status_ {
-    NPCLIENT_STATUS_OK,
-    NPCLIENT_STATUS_DISABLED
-} npclient_status;
-
+#ifdef NP_WINE_UNIX_LIB
+static FTMemMap MemData = {0};
+static FTMemMap *pMemData = 0;
+#else
 static HANDLE hFTMemMap = 0;
 static FTMemMap volatile * pMemData = 0;
+#endif
 static bool bEncryption = false;
 static unsigned char table[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-typedef struct tir_data
-{
-    short status;
-    short frame;
-    unsigned cksum;
-    float roll, pitch, yaw;
-    float tx, ty, tz;
-    float padding[9];
-} tir_data_t;
 
-typedef struct tir_signature
-{
-    char DllSignature[200];
-    char AppSignature[200];
-} tir_signature_t;
+#include "tirtypes.h"
 
-BOOL DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     UNUSED(lpvReserved);
 
@@ -111,7 +109,18 @@ BOOL DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
         dbg_report("DllMain: (%p, %ld, %p)\n", (void*) hinstDLL, (long) fdwReason, lpvReserved);
         dbg_report("DllMain: Attach request\n");
+
+#ifdef NP_WINE_UNIX_LIB
+        if(__wine_init_unix_call()){
+            dbg_report("__wine_init_unix_call failed\n");
+            // fprintf(stdout,"wine unix call failed\n");
+            puts("failed unix call init\n");
+            return FALSE;
+        }
+        dbg_report("__wine_init_unix_call success\n");
+ #endif
         DisableThreadLibraryCalls(hinstDLL);
+
 #if 0
         timeBeginPeriod(1);
 #endif
@@ -129,6 +138,14 @@ BOOL DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     }
     return TRUE;
 }
+
+#ifdef NP_WINE_UNIX_LIB
+NP_EXPORT(int) OpentrackUnixLibVersion()
+{
+    return 1;
+}
+#endif
+
 /******************************************************************
  *              NPPriv_ClientNotify (NPCLIENT.1)
  */
@@ -306,6 +323,11 @@ NP_EXPORT(int) NP_GetData(tir_data_t * data)
 #if DEBUG
         recv = 1;
 #endif
+
+#ifdef NP_WINE_UNIX_LIB
+        WINE_UNIX_CALL(np_get_ft_data,pMemData);
+#endif
+
         y = pMemData->data.Yaw   * NP_AXIS_MAX / M_PI;
         p = pMemData->data.Pitch * NP_AXIS_MAX / M_PI;
         r = pMemData->data.Roll  * NP_AXIS_MAX / M_PI;
@@ -486,9 +508,13 @@ NP_EXPORT(int) NP_ReCenter(void)
 
 NP_EXPORT(int) NP_RegisterProgramProfileID(unsigned short id)
 {
-    if (FTCreateMapping())
-        pMemData->GameId = id;
     dbg_report("RegisterProgramProfileID request: %d\n", id);
+    if (FTCreateMapping()){
+        pMemData->GameId = id;
+#ifdef NP_WINE_UNIX_LIB
+        WINE_UNIX_CALL(np_register_program_profile_id,(void*)&id);
+#endif
+    }
     return 0;
 }
 /******************************************************************
@@ -571,7 +597,9 @@ static bool FTCreateMapping(void)
 {
     if (pMemData)
         return true;
-
+#ifdef NP_WINE_UNIX_LIB
+    pMemData = &MemData;
+#else
     dbg_report("FTCreateMapping request (pMemData == NULL).\n");
 
     HANDLE hFTMutex = CreateMutexA(NULL, FALSE, FREETRACK_MUTEX);
@@ -579,17 +607,22 @@ static bool FTCreateMapping(void)
 
     hFTMemMap = CreateFileMappingA(INVALID_HANDLE_VALUE, 0, PAGE_READWRITE, 0, sizeof(FTMemMap), (LPCSTR) FT_MM_DATA);
     pMemData = (FTMemMap *) MapViewOfFile(hFTMemMap, FILE_MAP_WRITE, 0, 0, sizeof(FTMemMap));
+#endif
     return pMemData != NULL;
 }
 
 static void FTDestroyMapping(void)
 {
+#ifdef NP_WINE_UNIX_LIB
+    pMemData = 0;
+#else
     if (pMemData != NULL)
         UnmapViewOfFile((void*)pMemData);
 
     CloseHandle(hFTMemMap);
     pMemData = 0;
     hFTMemMap = 0;
+#endif
 }
 
 static __inline double clamp(double x, double xmin, double xmax)

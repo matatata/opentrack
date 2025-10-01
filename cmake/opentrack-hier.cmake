@@ -10,7 +10,7 @@
 include_guard(GLOBAL)
 
 if(APPLE)
-    set(opentrack-libexec "Plugins")
+    set(opentrack-libexec "opentrack.app/Contents/PlugIns/opentrack")
     set(opentrack-runtime-libexec "/../PlugIns/opentrack/")                        # MUST HAVE A TRAILING BACKSLASH, Used in APP
     set(opentrack-runtime-doc "/../Resources/")                         # MUST HAVE A TRAILING BACKSLASH
     set(opentrack-bin "${CMAKE_INSTALL_PREFIX}")
@@ -18,7 +18,9 @@ if(APPLE)
     set(opentrack-game-csv-doc "opentrack.app/Contents/Resources") # settings/freetracknoir supported games.csv goes here
     set(opentrack-i18n "opentrack.app/Contents/Resources") # used during install
     set(opentrack-runtime-i18n "../Resources/i18n") # used in application
-    set(opentrack-install-rpath "${CMAKE_INSTALL_PREFIX}/Library")
+    set(opentrack-install-rpath "@executable_path/../Frameworks")
+    set(opentrack-install-wine-unixlib "Wine/lib/wine") # Where should the builtin wine libs be installed? To install into an existing wine-installation chosse something like /opt/local/lib/wine or /Applications/Wine\ Stable.app/Contents/Resources/wine/lib/wine
+    set(opentrack-install-ftnoir-registry-tool "Wine/FTnoirRegistryTool") # Where should the registry tool be installed?
 elseif(WIN32)
     set(opentrack-libexec "modules")
     set(opentrack-runtime-libexec "/${opentrack-libexec}/")  # MUST HAVE A TRAILING BACKSLASH
@@ -40,6 +42,8 @@ else()
     set(opentrack-install-rpath "${CMAKE_INSTALL_PREFIX}/${opentrack-libexec}")
     set(opentrack-i18n "share/opentrack/i18n")
     set(opentrack-runtime-i18n "../share/opentrack/i18n")
+    set(opentrack-install-wine-unixlib "${opentrack-libexec}/wine/lib/wine") # Where should the builtin wine libs be installed? To install into an existing wine-installation chosse something like /opt/local/lib/wine
+    set(opentrack-install-ftnoir-registry-tool "${opentrack-libexec}/wine/FTnoirRegistryTool") # Where should the registry tool be installed?
 endif()
 
 function(otr_escape_string var str)
@@ -55,3 +59,5 @@ if(WIN32)
 endif()
 
 set(CMAKE_INSTALL_RPATH "${opentrack-install-rpath}")
+
+

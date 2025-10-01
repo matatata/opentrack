@@ -1,4 +1,4 @@
-#include "ftnoir_protocol_shm.h"
+#include "ftnoir_protocol_ftx.h"
 #include <QDebug>
 #include <QFileDialog>
 #include <QDir>

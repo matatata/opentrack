@@ -1,26 +1,25 @@
-#include "ftnoir_protocol_shm.h"
+#include "ftnoir_protocol_ftx.h"
 #include <QString>
 #include <QDebug>
 
 #include "csv/csv.h"
 
-native_shm::native_shm() = default;
+freetrackx::freetrackx() = default;
 
-native_shm::~native_shm()
-{
-    //shm_unlink("/" WINE_SHM_NAME);
-}
+freetrackx::~freetrackx() = default;
 
-void native_shm::pose(const double *headpose, const double*)
+void freetrackx::pose(const double *headpose, const double*)
 {
     static constexpr double d2r = M_PI/180;
     if (shm)
     {
-        lck_shm.lock();
-        for (int i = 3; i < 6; i++)
-            shm->data[i] = headpose[i] * d2r;
-        for (int i = 0; i < 3; i++)
-            shm->data[i] = headpose[i] * 10;
+        shm->data.Yaw = - headpose[Yaw] * d2r;
+        shm->data.Pitch = - headpose[Pitch] * d2r;
+        shm->data.Roll = headpose[Roll] * d2r;
+
+        shm->data.X = headpose[TX] * 10;
+        shm->data.Y = headpose[TY] * 10;
+        shm->data.Z = headpose[TZ] * 10;
 
         if (shm->gameid != gameid)
         {
@@ -37,12 +36,12 @@ void native_shm::pose(const double *headpose, const double*)
     }
 }
 
-module_status native_shm::initialize()
+module_status freetrackx::initialize()
 {
 
     if (lck_shm.success())
     {
-        shm = (WineSHM*) lck_shm.ptr();
+        shm = (FTPosixSHM*) lck_shm.ptr();
         lck_shm.lock();
         memset(shm, 0, sizeof(*shm));
         lck_shm.unlock();
@@ -55,4 +54,4 @@ module_status native_shm::initialize()
     }
 }
 
-OPENTRACK_DECLARE_PROTOCOL(native_shm, FTControls, wine_metadata)
+OPENTRACK_DECLARE_PROTOCOL(freetrackx, FTControls, ftx_metadata)
