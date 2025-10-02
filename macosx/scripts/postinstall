@@ -1,0 +1,44 @@
+#!/bin/bash
+
+APPSUPPORT="/Library/Application Support/opentrack"
+
+ask() {
+echo $(osascript -s s << EOT
+        try
+            set theAlertMessage to "$2"
+            display alert "$1" message theAlertMessage  buttons {"No", "Yes"} default button "Yes" cancel button "No"
+
+            if button returned of result = "Yes" then
+                return true
+            else
+                return false
+            end if
+        on error
+            return false
+        end try
+EOT
+    )
+}
+
+tmpdir=$(mktemp -d)
+
+cp -R "$APPSUPPORT/Wine/lib/wine" "$tmpdir/"
+chown -R "$USER":admin "$tmpdir"
+
+
+find "/Applications" /opt/local/lib -type d -path \*/lib/wine/x86_64-unix  -print0 | while read -d $'\0' file
+do
+    # maybe has problems with spaces?
+    dirname=$(dirname "$file")
+    confirmed=`ask "Wine installation found" "Shall I copy Opentrack's builtin dlls to \n'\" & \"$dirname\" & \"'\nso that you can use Opentrack with your windows games?"`
+
+
+    if [ "$confirmed" = "true" ]
+    then
+        ditto -V "$tmpdir/wine" "$dirname"
+    fi
+done
+
+
+
+rm -rf "$tmpdir"

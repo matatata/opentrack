@@ -1,6 +1,6 @@
 
 
-#include "freetrackclient_posix.h"
+#include "freetrackclient.h"
 
 #include <unistd.h>
 #include <stdio.h>

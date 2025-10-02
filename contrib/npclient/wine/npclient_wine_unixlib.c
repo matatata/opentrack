@@ -10,12 +10,20 @@ NTSTATUS NP_GetFTData(FTHeap *ftheap){
     FTX_Priv_Lock();
     FTPosixSHM *shm_posix = FTX_Priv_GetSHM();
     FTData* data = &ftheap->data;
-    data->Yaw = shm_posix->data.Yaw;
-    data->Pitch = shm_posix->data.Pitch;
-    data->Roll = shm_posix->data.Roll;
-    data->X = shm_posix->data.X;
-    data->Y = shm_posix->data.Y;
-    data->Z = shm_posix->data.Z;
+    data->Yaw = shm_posix->data[FTX_YAW];
+    data->Pitch = shm_posix->data[FTX_PITCH];
+    data->Roll = shm_posix->data[FTX_ROLL];
+    data->X = shm_posix->data[FTX_X];
+    data->Y = shm_posix->data[FTX_Y];
+    data->Z = shm_posix->data[FTX_Z];
+
+    // printf("posix: %f %f %f %f %f %f\n",shm_posix->data[FTX_YAW],
+    //                                 shm_posix->data[FTX_PITCH],
+    //                                 shm_posix->data[FTX_ROLL],
+    //                                 shm_posix->data[FTX_X],
+    //                                 shm_posix->data[FTX_Y],
+    //                                 shm_posix->data[FTX_Z]);
+
     data->DataID++;
     data->CamWidth = 250;
     data->CamHeight = 100;

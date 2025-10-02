@@ -10,17 +10,19 @@
 include_guard(GLOBAL)
 
 if(APPLE)
-    set(opentrack-libexec "opentrack.app/Contents/PlugIns/opentrack")
+    set(opentrack-bin "${CMAKE_INSTALL_PREFIX}")
+    set(opentrack-libexec "${opentrack-bin}/opentrack.app/Contents/PlugIns/opentrack")
     set(opentrack-runtime-libexec "/../PlugIns/opentrack/")                        # MUST HAVE A TRAILING BACKSLASH, Used in APP
     set(opentrack-runtime-doc "/../Resources/")                         # MUST HAVE A TRAILING BACKSLASH
-    set(opentrack-bin "${CMAKE_INSTALL_PREFIX}")
     set(opentrack-doc "doc")
-    set(opentrack-game-csv-doc "opentrack.app/Contents/Resources") # settings/freetracknoir supported games.csv goes here
-    set(opentrack-i18n "opentrack.app/Contents/Resources") # used during install
+    set(opentrack-game-csv-doc "${opentrack-bin}/opentrack.app/Contents/Resources") # settings/freetracknoir supported games.csv goes here
+    set(opentrack-i18n "${opentrack-bin}/opentrack.app/Contents/Resources") # used during install
     set(opentrack-runtime-i18n "../Resources/i18n") # used in application
     set(opentrack-install-rpath "@executable_path/../Frameworks")
     set(opentrack-install-wine-unixlib "Wine/lib/wine") # Where should the builtin wine libs be installed? To install into an existing wine-installation chosse something like /opt/local/lib/wine or /Applications/Wine\ Stable.app/Contents/Resources/wine/lib/wine
     set(opentrack-install-ftnoir-registry-tool "Wine/FTnoirRegistryTool") # Where should the registry tool be installed?
+    set(opentrack-install-freetrackclient-posix "usr/local") # Where should the SDK be installed?
+    set(opentrack-runtime-freetrackclient-posix-rpath "/usr/local/lib") # Where will the library be found
 elseif(WIN32)
     set(opentrack-libexec "modules")
     set(opentrack-runtime-libexec "/${opentrack-libexec}/")  # MUST HAVE A TRAILING BACKSLASH
@@ -44,6 +46,8 @@ else()
     set(opentrack-runtime-i18n "../share/opentrack/i18n")
     set(opentrack-install-wine-unixlib "${opentrack-libexec}/wine/lib/wine") # Where should the builtin wine libs be installed? To install into an existing wine-installation chosse something like /opt/local/lib/wine
     set(opentrack-install-ftnoir-registry-tool "${opentrack-libexec}/wine/FTnoirRegistryTool") # Where should the registry tool be installed?
+    set(opentrack-install-freetrackclient-posix "usr/local") # Where should the SDK be installed?
+    set(opentrack-runtime-freetrackclient-posix-rpath "/usr/local/lib") # Where will the library be found
 endif()
 
 function(otr_escape_string var str)

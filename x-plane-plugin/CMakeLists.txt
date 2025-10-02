@@ -14,10 +14,10 @@ if(LINUX OR APPLE)
         # need to set rpath to relative location in order to load the libfreetrackclient shared libarary
         if(APPLE)
             set_target_properties(${self}  PROPERTIES
-                INSTALL_RPATH "@loader_path;/usr/local/lib")
+                INSTALL_RPATH "@loader_path;${opentrack-runtime-freetrackclient-posix-rpath}")
         elseif(UNIX)
             set_target_properties(${self} PROPERTIES
-                INSTALL_RPATH "$ORIGIN:/usr/local/lib")
+                INSTALL_RPATH "$ORIGIN:${opentrack-runtime-freetrackclient-posix-rpath}")
         endif()
 
         if(APPLE)
@@ -43,14 +43,14 @@ if(LINUX OR APPLE)
         endif()
 
         if(APPLE)
-            set_target_properties(${name} PROPERTIES INSTALL_RPATH "@loader_path;/usr/local/lib")
+            set_target_properties(${name} PROPERTIES INSTALL_RPATH "@loader_path;${opentrack-runtime-freetrackclient-posix-rpath}")
             target_link_libraries(${self} PRIVATE libfreetrackclient)
         else()
-            set_target_properties(${name} PROPERTIES INSTALL_RPATH "$ORIGIN:/usr/local/lib")
+            set_target_properties(${name} PROPERTIES INSTALL_RPATH "$ORIGIN:${opentrack-runtime-freetrackclient-posix-rpath}")
             target_link_libraries(${self} PRIVATE rt libfreetrackclient64)
         endif()
 
-        install(FILES $<TARGET_FILE:libfreetrackclient> DESTINATION ${xplane_plugin_install_dir})
+        # install(FILES $<TARGET_FILE:libfreetrackclient> DESTINATION ${xplane_plugin_install_dir})
 
 
         install(TARGETS "${self}"

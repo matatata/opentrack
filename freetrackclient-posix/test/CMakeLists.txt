@@ -30,13 +30,9 @@ if(UNIX)
             target_link_libraries("${targetname}" PRIVATE dl)
         endif()
 
-        # install(TARGETS
-        #     "${targetname}_dep" "${targetname}"
-        #     RUNTIME DESTINATION "SDK"
-        #     LIBRARY DESTINATION "SDK"
-        # )
-
-        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/test.c"
+        install(FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/test.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/Makefile"
             DESTINATION "SDK"
         )
 

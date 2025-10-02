@@ -27,6 +27,7 @@ extern "C"
 {
 #endif
 
+// typedef double FTXData[6];
 
 // angles are in radians
 typedef struct FTXData {

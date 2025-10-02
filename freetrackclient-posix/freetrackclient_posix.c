@@ -55,12 +55,12 @@ EXPORT bool FTXGetData(FTXData *headpose)
     FTPosixSHM *shm_posix = FTX_Priv_GetSHM();
     if(shm_posix){
         FTXData* data = headpose;
-        data->Yaw = shm_posix->data.Yaw;
-        data->Pitch = shm_posix->data.Pitch;
-        data->Roll = shm_posix->data.Roll;
-        data->X = shm_posix->data.X;
-        data->Y = shm_posix->data.Y;
-        data->Z = shm_posix->data.Z;
+        data->Yaw = shm_posix->data[FTX_YAW];
+        data->Pitch = shm_posix->data[FTX_PITCH];
+        data->Roll = shm_posix->data[FTX_ROLL];
+        data->X = shm_posix->data[FTX_X];
+        data->Y = shm_posix->data[FTX_Y];
+        data->Z = shm_posix->data[FTX_Z];
     }
     else {
         dbg_report("oho\n");

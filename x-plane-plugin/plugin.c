@@ -22,7 +22,7 @@
 #include <XPLMUtilities.h>
 #include <XPLMMenus.h>
 
-#include "freetrackclient_posix.h"
+#include "freetrackclient.h"
 
 #ifndef PLUGIN_API
 #define PLUGIN_API

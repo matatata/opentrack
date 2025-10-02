@@ -23,9 +23,9 @@ if((LINUX OR APPLE) AND (EXISTS "${SDK_WINE_PATH}" AND IS_DIRECTORY "${SDK_WINE_
 
         target_link_libraries("${targetname}" PRIVATE "libfreetrackclient${arch}")
         if(APPLE)
-            set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "@loader_path;/usr/local/lib")
+            set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "@loader_path;${opentrack-runtime-freetrackclient-posix-rpath}")
         else()
-            set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "$ORIGIN:/usr/local/lib")
+            set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "$ORIGIN:${opentrack-runtime-freetrackclient-posix-rpath}")
         endif()
 
         target_compile_definitions("${targetname}" PRIVATE WINE_UNIX_LIB)
@@ -63,18 +63,18 @@ if((LINUX OR APPLE) AND (EXISTS "${SDK_WINE_PATH}" AND IS_DIRECTORY "${SDK_WINE_
         install(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/freetrackclient.so"
             "${CMAKE_CURRENT_BINARY_DIR}/freetrackclient64.so"
-            "$<TARGET_FILE:libfreetrackclient>"
+            # "$<TARGET_FILE:libfreetrackclient>"
             DESTINATION "${opentrack-install-wine-unixlib}/x86_64-unix"
         )
     else()
         install(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/freetrackclient64.so"
-            "$<TARGET_FILE:libfreetrackclient64>"
+            # "$<TARGET_FILE:libfreetrackclient64>"
             DESTINATION "${opentrack-install-wine-unixlib}/x86_64-unix"
         )
         install(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/freetrackclient.so"
-            "$<TARGET_FILE:libfreetrackclient>"
+            # "$<TARGET_FILE:libfreetrackclient>"
             DESTINATION "${opentrack-install-wine-unixlib}/i386-unix"
         )
     endif()

@@ -13,17 +13,16 @@ void freetrackx::pose(const double *headpose, const double*)
     static constexpr double d2r = M_PI/180;
     if (shm)
     {
-        shm->data.Yaw = - headpose[Yaw] * d2r;
-        shm->data.Pitch = - headpose[Pitch] * d2r;
-        shm->data.Roll = headpose[Roll] * d2r;
+        shm->data[FTX_YAW] = - headpose[Yaw] * d2r;
+        shm->data[FTX_PITCH] = - headpose[Pitch] * d2r;
+        shm->data[FTX_ROLL] = headpose[Roll] * d2r;
 
-        shm->data.X = headpose[TX] * 10;
-        shm->data.Y = headpose[TY] * 10;
-        shm->data.Z = headpose[TZ] * 10;
+        shm->data[FTX_X] = headpose[TX] * 10;
+        shm->data[FTX_Y] = headpose[TY] * 10;
+        shm->data[FTX_Z] = headpose[TZ] * 10;
 
         if (shm->gameid != gameid)
         {
-            //qDebug() << "proto/wine: looking up gameData";
             QString gamename;
             QMutexLocker foo(&game_name_mutex);
             /* only EZCA for FSX requires dummy process, and FSX doesn't work on Linux */

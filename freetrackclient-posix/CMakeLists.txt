@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+
 if(LINUX OR APPLE)
     project(libfreetrackclient VERSION 0.9.0
         DESCRIPTION "This is a client library for the Opentrack protocol \"Opentrack Shared Memory\""
@@ -30,7 +31,7 @@ if(LINUX OR APPLE)
         set_target_properties("${targetname}" PROPERTIES OUTPUT_NAME "freetrackclient${arch}")
 
 
-        set_target_properties("${targetname}" PROPERTIES PUBLIC_HEADER "include/freetrackclient_posix.h")
+        set_target_properties("${targetname}" PROPERTIES PUBLIC_HEADER "include/freetrackclient.h")
 
         target_compile_options("${targetname}" PRIVATE ${cflags})
         target_link_options("${targetname}" PRIVATE ${lflags})
@@ -45,9 +46,9 @@ if(LINUX OR APPLE)
 
         install(TARGETS
             "${targetname}"
-            ARCHIVE DESTINATION "SDK/${ftx_clientlibs_install_dir}"
-            LIBRARY DESTINATION "SDK/${ftx_clientlibs_install_dir}"
-            PUBLIC_HEADER DESTINATION "SDK/include"
+            ARCHIVE DESTINATION "${opentrack-install-freetrackclient-posix}/lib/${ftx_clientlibs_install_dir}"
+            LIBRARY DESTINATION "${opentrack-install-freetrackclient-posix}/lib/${ftx_clientlibs_install_dir}"
+            PUBLIC_HEADER DESTINATION "${opentrack-install-freetrackclient-posix}/include"
         )
 
 

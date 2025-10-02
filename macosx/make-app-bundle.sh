@@ -9,6 +9,7 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
 trap 'echo "--\n--\n--\n--\n\"${last_command}\" command exited with exit code $?."' EXIT
 
 APPNAME=opentrack
+
 # Alternative we could look at https://github.com/arl/macdeployqtfix ??
 
 #macosx directory
@@ -27,16 +28,18 @@ macdeployqt_executable="${6:-macdeployqt}"
 tmp="$(mktemp -d "/tmp/$APPNAME-tmp.XXXXXXX")"
 test $? -eq 0
 
+APPROOT="$install/$APPNAME.app"
+
 
 # Add rpath for application so it can find the libraries
-#install_name_tool -add_rpath @executable_path/../Frameworks "$install/$APPNAME.app/Contents/MacOS/$APPNAME"
+#install_name_tool -add_rpath @executable_path/../Frameworks "$APPROOT/Contents/MacOS/$APPNAME"
 
 
 # Create an 512 resolution size for the icon (for retina displays mostly)
 #gm convert -size 512x512 "$dir/../gui/images/opentrack.png" "$tmp/opentrack.png"
 convert "$dir/../gui/images/opentrack.png" -filter triangle -resize 512x512 "$tmp/opentrack.png"
 
-mkdir -p "$install/$APPNAME.app/Contents/Resources/"
+mkdir -p "$APPROOT/Contents/Resources/"
 
 # Build iconset
 mkdir "$tmp/$APPNAME.iconset"
@@ -48,30 +51,29 @@ sips -z 128 128   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_128x128
 sips -z 256 256   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_128x128@2x.png"
 sips -z 512 512   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_256x256@2x.png"
 sips -z 512 512   "$tmp/opentrack.png" --out "$tmp/$APPNAME.iconset/icon_512x512.png"
-iconutil -c icns -o "$install/$APPNAME.app/Contents/Resources/$APPNAME.icns" "$tmp/$APPNAME.iconset"
+iconutil -c icns -o "$APPROOT/Contents/Resources/$APPNAME.icns" "$tmp/$APPNAME.iconset"
 rm -rf "$tmp"
 
 
 # Copy our own plist and set correct version
 
-cp "$dir/Info.plist" "$install/$APPNAME.app/Contents/"
-sed -i '' -e "s#@OPENTRACK-VERSION@#$version#g" "$install/$APPNAME.app/Contents/Info.plist"
+cp "$dir/Info.plist" "$APPROOT/Contents/"
+sed -i '' -e "s#@OPENTRACK-VERSION@#$version#g" "$APPROOT/Contents/Info.plist"
 
 # Copy PkgInfo
-cp "$dir/PkgInfo" "$install/$APPNAME.app/Contents/"
+cp "$dir/PkgInfo" "$APPROOT/Contents/"
 
 # Copy plugins
-#mkdir -p "$install/$APPNAME.app/Contents/PlugIns"
-#mkdir -p "$install/$APPNAME.app/Contents/MacOS/"
+#mkdir -p "$APPROOT/Contents/PlugIns"
+#mkdir -p "$APPROOT/Contents/MacOS/"
 # put the modules in the bundle
-#cp -v -r "$install/PlugIns" "$install/$APPNAME.app/Contents/"
-#cp -v -r "$install/Library/" "$install/$APPNAME.app/Contents/Frameworks/"
+#cp -v -r "$install/PlugIns" "$APPROOT/Contents/"
+#cp -v -r "$install/Library/" "$APPROOT/Contents/Frameworks/"
 
-if [[ -z "$SKIP_MACDEPLOY_AND_DMG" ]]
+if [[ -z "$SKIP_QT_MACDEPLOY" ]]
 then
-# Use either of these, two of them at the same time will break things!
-"${macdeployqt_executable}" "$install/$APPNAME.app" # -libpath="$install/$APPNAME.app/Contents/Frameworks" #-libpath="$install/Library"
-#sh "$dir/install-fail-tool" "$install/$APPNAME.app/Contents/Frameworks"
+    echo "Will use macdeployqt to make the app standalone. This will take some time skip with env variable SKIP_QT_MACDEPLOY=1"
+    "${macdeployqt_executable}" "$APPROOT" # -libpath="$APPROOT/Contents/Frameworks" #-libpath="$install/Library"
 fi
 
 if [ ! -d "$install/xplane" ]
@@ -84,62 +86,62 @@ then
   echo "sign to run locally"
   # Sign it to run it locally otherwise you'll get errors. Also I've noticed that
   # this might make the binaries also usable for other users, but macOS will complain very much and it might not even work. I gave up and bought an Apple Developer Membership
-  codesign --force --deep -vv --sign - "$install/$APPNAME.app"
+  codesign --force --deep -vv --sign - "$APPROOT"
 else
   # You have a proper developer certificate:
   echo "sign as $code_sign_identity"
-  codesign --force --deep --verify -vv --options runtime --timestamp --entitlements $dir/entitlements.plist --sign "$code_sign_identity" "$install/$APPNAME.app"
-  find "$install/xplane/" "$install/doc/" "$install/Wine/" "$install/SDK/" -type f -exec codesign --force --verify -vv --options runtime --sign "$code_sign_identity" {} \;
+  codesign --force --deep --verify -vv --options runtime --timestamp --entitlements $dir/entitlements.plist --sign "$code_sign_identity" "$APPROOT"
+  find "$install/usr/" "$install/xplane/" "$install/doc/" "$install/Wine/" "$install/SDK/" -type f -exec codesign --force --verify -vv --options runtime --sign "$code_sign_identity" {} \;
 fi
 
-if [ -n "$SKIP_MACDEPLOY_AND_DMG" ]
-then
-    echo "skipped dmg creation"
-    exit 0
-fi
 
-#Build DMG
-#https://github.com/andreyvit/create-dmg
 
-FILE="${version}_${osx_arch}.dmg"
+# create pkg
+pkgroot="$install/../pkgroot"
+rm -rf "$pkgroot" &> /dev/null
 
-rm -f *.dmg
-# create-dmg \
-#   --volname "$APPNAME" \
-#   --volicon "$install/$APPNAME.app/Contents/Resources/$APPNAME.icns" \
-#   --window-pos 200 120 \
-#   --window-size 800 450 \
-#   --icon-size 80 \
-#   --background "$dir/dmgbackground.png" \
-#   --icon "$APPNAME.app" 200 180 \
-#   --app-drop-link 420 180 \
-#   --hide-extension "$APPNAME.app" \
-#   --no-internet-enable \
-#   --add-folder "Document" "$install/doc" 20 40 \
-#   --add-folder "Xplane-Plugin" "$install/xplane" 420 40 \
-#   "$FILE" \
-#   "$install/$APPNAME.app"
+ditto "$APPROOT" "$pkgroot/Applications/$APPNAME.app"
+ditto "$install/usr" "$pkgroot/usr"
 
-hdiutil create -fs HFS+ -volname "${version}" -srcfolder "$install" "$FILE"
+appsupportroot="$pkgroot/Library/Application Support/$APPNAME"
+mkdir -p "$appsupportroot"
+for d in xplane doc Wine SDK
+do
+    ditto "$install/$d" "$appsupportroot/$d"
+done
 
-# Check if we have a DMG otherwise fail
 
-if [ -f "$FILE" ]; then
+#xattr -cr "$pkgroot"
 
-  # sign the dmg if You have a proper developer certificate:
-  if [ "$code_sign_identity" != "-" ]
-  then
-    codesign -vv --force -s "$code_sign_identity" "$FILE"
-  fi
+PGKFILE="${version}_${osx_arch}.pkg"
+rm -f *.pkg
+pkgbuild --root "$pkgroot"  \
+    --install-location / \
+    --script $dir/scripts \
+    --component-plist ../opentrack/macosx/MacOpentrack-pkg.plist \
+    --version "${version}" \
+    --identifier com.github.matatata.opentrack   \
+    "TEMP.pkg"
+
+productsign --sign "Developer ID Installer" \
+    "TEMP.pkg" "$PGKFILE"
+
+pkgutil --check-signature  "$PGKFILE"
+
+
+
+# Check if we have a pkg otherwise fail
+
+if [ -f "$PGKFILE" ]; then
 
   #To notarize do this:
-  #xcrun notarytool submit "$FILE" --apple-id appleid@example.com--team-id "TEAM_ID" --password "specific-app-password" --verbose --wait
+  #xcrun notarytool submit "$DMGFILE" --apple-id appleid@example.com--team-id "TEAM_ID" --password "specific-app-password" --verbose --wait
   #
-  #xcrun stapler staple -v "$FILE"
+  #xcrun stapler staple -v "$DMGFILE"
 
-  ls -ial "$FILE"
+  ls -ial "$PGKFILE"
 else
-   echo "Failed to create $FILE"
+   echo "Failed to create $PGKFILE"
    exit 2
 fi
 

@@ -16,7 +16,7 @@
  * Please do not use this private API unless you really need to.
  * as it may change and thus break things in future. Instead rely on the public header:
  */
-#include "freetrackclient_posix.h"
+#include "freetrackclient.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -24,19 +24,35 @@ extern "C"
 #endif
 
 //-------------------SHM-------------------------
-#define FTX_SHM_NAME "facetracknoir-posix-shm"
-#define FTX_MTX_NAME "facetracknoir-posix-mtx"
+// For now this is make compatible with the origina proto-wine see proto-wine/wine-shm.h
+// It's subject to change in future
+#define FTX_SHM_NAME "facetracknoir-wine-shm"
+#define FTX_MTX_NAME "facetracknoir-wine-mtx"
 
+// angles are in radians
+typedef enum  {
+    FTX_X = 0, // positive move right
+    FTX_Y, // positive move up
+    FTX_Z, // positive move away
+    FTX_YAW, // positive yaw to the left
+    FTX_PITCH, // positive pitch up
+    FTX_ROLL // positive roll to the left
+} FTPosixAxis;
+
+
+
+typedef double _ft_data[6];
 
 typedef struct FTPosixSHM
 {
-    FTXData data;
+    _ft_data data; // index with FTPosixAxis
     // compatibility to support freetrack and npclient under WINE jus like proto-wine does
     int gameid, gameid2;
     unsigned char table[8];
     // ---
     bool stop;
 } FTPosixSHM;
+
 
 //-------------------SHM-------------------------
 

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+APPSUPPORT="/Library/Application Support/opentrack"
+rm -rf "$APPSUPPORT"
