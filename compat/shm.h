@@ -1,14 +1,19 @@
 /* Copyright (c) 2013 Stanislaw Halik <sthalik@misaki.pl>
-
+ *
+ * 2025 matatata github.com/matatata/opentrack factored out C-library
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
  */
-#pragma once
+#ifndef SHM_WRAPPER_H
+#define SHM_WRAPPER_H
+
 
 #if defined(_WIN32)
 #include <windows.h>
 #else
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/file.h>
@@ -19,10 +24,13 @@
 #include <sys/types.h>
 #endif
 
-#include "export.hpp"
-#include "macros.h"
 
-class OTR_COMPAT_EXPORT shm_wrapper final
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+typedef struct shm_wrapper_t
 {
     void* mem;
 #if defined(_WIN32)
@@ -31,14 +39,28 @@ class OTR_COMPAT_EXPORT shm_wrapper final
     int fd;
     unsigned size;
 #endif
+} shm_wrapper_t;
 
-public:
-    shm_wrapper(const char *shm_name, const char *mutex_name, int map_size);
-    ~shm_wrapper();
-    bool lock();
-    bool unlock();
-    bool success();
-    inline void* ptr() { return mem; }
+bool shm_wrapper_init(shm_wrapper_t* self,const char *shm_name, const char *mutex_name, int mapSize,bool memset_zero);
+// inline void* ptr(shm_wrapper_t* self) { return self->mem; }
+void shm_wrapper_destroy(shm_wrapper_t* self);
+#if defined(_WIN32)
+bool shm_wrapper_lock(shm_wrapper_t* self);
+#else
+typedef enum {
+    EXCLUSIVE=0,
+    SHARED
+} shm_lock_t;
+bool shm_wrapper_lock(shm_wrapper_t* self,shm_lock_t shared);
+#endif
+bool shm_wrapper_unlock(shm_wrapper_t* self);
 
-    OTR_DISABLE_MOVE_COPY(shm_wrapper);
-};
+bool shm_wrapper_success(shm_wrapper_t *self);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif // SHM_WRAPPER_H

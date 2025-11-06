@@ -1,0 +1,180 @@
+/* Copyright (c) 2013 Stanislaw Halik <sthalik@misaki.pl>
+ *
+ * 2025 matatata github.com/matatata/opentrack Factored out C-library
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ */
+
+#include "shm.h"
+
+#include <stdio.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+void shm_warn(const char* str,int error) {
+    fprintf(stderr,"shm: %s error: %i\n",str,error);
+}
+
+#ifdef _WIN32
+
+#include <accctrl.h>
+#include <aclapi.h>
+
+bool shm_wrapper_init(shm_wrapper_t *self,const char* shm_name, const char* mutex_name, int map_size,bool memset_zero)
+{
+    if (mutex_name == nullptr)
+        self->mutex = nullptr;
+    else
+    {
+        self->mutex = CreateMutexA(nullptr, false, mutex_name);
+
+        if (!self->mutex)
+        {
+            shm_warn("CreateMutexA", (int) GetLastError());
+            return false;
+        }
+    }
+
+    self->mapped_file = CreateFileMappingA(
+                 INVALID_HANDLE_VALUE,
+                 nullptr,
+                 PAGE_READWRITE,
+                 0,
+                 map_size,
+                 shm_name);
+
+    if (!self->mapped_file)
+    {
+        shm_warn("CreateFileMappingA", (int) GetLastError());
+
+        return false;
+    }
+
+    self->mem = MapViewOfFile(self->mapped_file,
+                        FILE_MAP_WRITE,
+                        0,
+                        0,
+                        map_size);
+
+    if (!self->mem) {
+        shm_warn("MapViewOfFile:", (int) GetLastError());
+        return false;
+    }
+    if(memset_zero){
+        shm_wrapper_lock(self);
+        memset(self->mem,0,map_size);
+        shm_wrapper_unlock(self);
+    }
+    return true;
+}
+
+void shm_wrapper_destroy(shm_wrapper_t *self)
+{
+    if (self->mem && !UnmapViewOfFile(self->mem))
+        goto fail;
+
+    if (self->mapped_file && !CloseHandle(self->mapped_file))
+        goto fail;
+
+    if (self->mutex && !CloseHandle(self->mutex))
+        goto fail;
+
+    return;
+
+fail:
+    shm_warn("failed to close mapping", (int) GetLastError());
+}
+
+bool shm_wrapper_lock(shm_wrapper_t *self)
+{
+    if (self->mutex)
+        return WaitForSingleObject(self->mutex, INFINITE) == WAIT_OBJECT_0;
+    else
+        return false;
+}
+
+bool shm_wrapper_unlock(shm_wrapper_t *self)
+{
+    if (self->mutex)
+        return ReleaseMutex(self->mutex);
+    else
+        return false;
+}
+
+bool shm_wrapper_success(shm_wrapper_t *self)
+{
+    return self->mem != (void*) -1;
+}
+
+#else
+
+#include <limits.h>
+
+#include <errno.h>
+
+bool shm_wrapper_init(shm_wrapper_t *self,const char *shm_name, const char* mutex_name, int map_size,bool memset_zero)
+{
+    (void)mutex_name; //unused
+    self->size=map_size;
+    char filename[PATH_MAX+2]={};
+    strcpy(filename, "/");
+    strcat(filename, shm_name);
+    self->fd = shm_open(filename, O_RDWR | O_CREAT, 0600);
+    if(self->fd == -1){
+        shm_warn("shm_open failed",errno);
+        return false;
+    }
+
+    (void) ftruncate(self->fd, map_size);
+    self->mem = mmap((void*)0, map_size, PROT_READ|PROT_WRITE, MAP_SHARED, self->fd, (off_t)0);
+
+    if(self->mem == MAP_FAILED ){
+        shm_warn("mmap failed errno",errno);
+        return false;
+    }
+    if(memset_zero){
+        // void volatile* restrict ptr = self->mem;
+        // for (size_t i = 0; i < map_size; i++)
+        //     *((char volatile* restrict)ptr + i) = 0;
+        // asm volatile("" ::: "memory");
+        shm_wrapper_lock(self,EXCLUSIVE);
+        memset(self->mem,0,map_size);
+        shm_wrapper_unlock(self);
+    }
+
+    return true;
+}
+
+void shm_wrapper_destroy(shm_wrapper_t *self)
+{
+    (void) munmap(self->mem, self->size);
+    (void) close(self->fd);
+}
+
+bool shm_wrapper_lock(shm_wrapper_t *self,shm_lock_t lcktype)
+{
+    return flock(self->fd, lcktype == SHARED ? LOCK_SH : LOCK_EX) == 0;
+}
+
+bool shm_wrapper_unlock(shm_wrapper_t *self)
+{
+    return flock(self->fd, LOCK_UN) == 0;
+}
+
+bool shm_wrapper_success(shm_wrapper_t *self)
+{
+    return self->mem != NULL;
+}
+
+#endif
+
+
+#ifdef __cplusplus
+}//extern C
+#endif
+

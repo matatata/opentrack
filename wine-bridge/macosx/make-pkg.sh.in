@@ -1,0 +1,82 @@
+#!/bin/bash
+
+srcdir="$1"
+srciptdir="$2"
+install="$3"
+commit="$4"
+bindir="$5"
+pkgroot="$install"
+
+if [ -n "$CODESIGN" ] || [ -n "$PACKAGE" ]
+then
+ CODESIGN_IDENTITY=${CODESIGN_IDENTITY:-Developer ID Application}
+ echo "Code-Sign-Identity is $CODESIGN_IDENTITY"
+fi
+
+if [ -n "$CODESIGN_IDENTITY" ]
+then
+    find "$pkgroot/@opentrack-install-winebridge@" -type f \
+     \( -name "*.so" -o -name "*.dll" -o -name "*.exe" \
+        -o -name "*.sh" \
+     \) \
+    -exec codesign -vv --timestamp --sign "${CODESIGN_IDENTITY}" "{}" \;
+fi
+
+if [ -z "$PACKAGE" ]
+then
+    echo "done. Not packaging wine-bridge. To do so set environment variable PACKAGE=1. PACKAGE implies CODESIGN"
+    exit 0
+elif [[ "$install" == "" || "$install" == "/" ]]
+then
+    echo "Cannot package with installdir='$install'"
+    exit 1
+fi
+
+## UPDATE THIS WITH EACH RELEAS!!!
+PKGVERSION=1
+
+PGKFILE="$bindir/opentrack-wine-bridge-${commit}.pkg"
+
+rm -f "$bindir"/*.pkg
+
+
+
+find "$pkgroot" \( -name "*._" -o -name ".DS_Store" \) -delete
+# find "$pkgroot/@opentrack-install-winebridge@" \( -name "*._" -o -name ".DS_Store" \) -delete
+
+
+# pkgbuild --root "$pkgroot/@opentrack-install-winebridge@"  \
+#     --install-location "/@opentrack-install-winebridge@"  \
+pkgbuild --root "$pkgroot"  \
+    --install-location "/"  \
+    --script "$srciptdir" \
+    --component-plist "${srcdir}/WineBridge-pkg.plist" \
+    --version "$PKGVERSION" \
+    --identifier com.github.opentrack.wine-bridge.pkg   \
+    --sign "Developer ID Installer" \
+    "$PGKFILE"
+
+
+tmpdir=$(mktemp -d)
+ditto "$PGKFILE" "$tmpdir/"
+ditto "$pkgroot/@opentrack-install-winebridge@/README".*  "$tmpdir/"
+
+rm -f "$bindir"/*.dmg
+DMGFILE="$bindir/Opentrack_Wine_Bridge_${commit}.dmg"
+
+hdiutil create  -srcfolder "$tmpdir" -volname "Opentrack Wine Bridge" -ov -format UDZO "$DMGFILE"
+codesign  -vv --force --sign "$CODESIGN_IDENTITY" "$DMGFILE"
+
+rm -rf "$tmpdir"
+
+
+if [ -n "$NOTARIZE" ]
+then
+    xcrun notarytool submit "$DMGFILE" \
+                   --keychain-profile "notarytool-password" \
+                   --verbose \
+                   --wait \
+
+    xcrun stapler staple -v "$DMGFILE"
+
+fi
