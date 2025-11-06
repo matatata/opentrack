@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# In macOS scripts we always assume this being at /
+winebridge_dir="/@opentrack-install-winebridge@"
+
+#set -e #fail immediately on errros
+
+find "$winebridge_dir" -not -name "*.log" -delete
+
+echo "OK"
+
+exit 0
