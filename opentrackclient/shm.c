@@ -1,0 +1,1 @@
+#include "../compat/shm.c"
