@@ -7,7 +7,7 @@
 // OSX sdk 10.8 build error otherwise
 #undef _LIBCPP_MSVCRT
 
-#include "compat/shm.h"
+#include "compat/shm.hpp"
 #include "compat/shm.cpp"
 #include "wine-shm.h"
 #include "compat/library-path.hpp"

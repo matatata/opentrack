@@ -2,7 +2,7 @@
 
 #include "video/camera.hpp"
 #include "shm-layout.hpp"
-#include "compat/shm.h"
+#include "compat/shm.hpp"
 #include "options/options.hpp"
 #include "compat/macros.h"
 #include "compat/timer.hpp"

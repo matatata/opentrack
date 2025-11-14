@@ -27,6 +27,10 @@ function(otr_init_variant)
         "video"
         "video-*"
         "opentrack"
+        "opentrackclient"
+        "freetrackclient"
+        "contrib/npclient"
+        "wine-bridge"
     )
     set_property(GLOBAL PROPERTY opentrack-subprojects "${subprojects}")
 endfunction()

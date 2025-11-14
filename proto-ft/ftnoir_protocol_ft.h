@@ -19,7 +19,7 @@
 #include <cinttypes>
 #include "freetrackclient/fttypes.h"
 
-#include "compat/shm.h"
+#include "compat/shm.hpp"
 #include "options/options.hpp"
 
 #include <memory>

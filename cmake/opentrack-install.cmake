@@ -54,12 +54,15 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # For now copy third party needed files into a seperate direcvtory instead of the plugins directory
-if (APPLE)
-    set(OSX_POST_INSTALL_DIR "/../thirdparty")
+# the on macOS deprecated proto-wine needs them though
+if (APPLE AND NOT SDK_WINE)
+    set(THIRDPARTY_INSTALL_DIR "${opentrack-aux}/thirdparty")
+else()
+    set(THIRDPARTY_INSTALL_DIR "${opentrack-libexec}")
 endif()
-otr_install_exec("${opentrack-libexec}${OSX_POST_INSTALL_DIR}" FILES "bin/freetrackclient.dll")
-otr_install_exec("${opentrack-libexec}${OSX_POST_INSTALL_DIR}" FILES "bin/freetrackclient64.dll")
-otr_install_exec("${opentrack-libexec}${OSX_POST_INSTALL_DIR}" FILES
+otr_install_exec("${THIRDPARTY_INSTALL_DIR}" FILES
+    "bin/freetrackclient.dll"
+    "bin/freetrackclient64.dll"
     "bin/NPClient.dll"
     "bin/NPClient64.dll"
     "bin/TrackIR.exe")

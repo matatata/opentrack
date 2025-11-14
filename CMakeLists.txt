@@ -33,7 +33,7 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(opentrack)
 
 # must be prior to CMakeDetermineCXXCompiler due to rpath
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR NOT CMAKE_INSTALL_PREFIX)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR NOT DEFINED CMAKE_INSTALL_PREFIX)
     set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "" FORCE)
 endif()
 
@@ -133,3 +133,5 @@ foreach(k "" "_${CMAKE_BUILD_TYPE}")
     message("   STATIC${k}: ${CMAKE_STATIC_LINKER_FLAGS${k}}")
 endforeach()
 message("--")
+
+

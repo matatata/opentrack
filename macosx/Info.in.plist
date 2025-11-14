@@ -7,15 +7,15 @@
   <key>CFBundleExecutable</key>
   <string>opentrack</string>
   <key>CFBundleIdentifier</key>
-  <string>com.github.matatata.opentrack</string>
+  <string>com.github.opentrack</string>
   <key>CFBundleName</key>
   <string>opentrack</string>
   <key>CFBundleIconFile</key>
   <string>opentrack.icns</string>
   <key>CFBundleVersion</key>
-  <string>@OPENTRACK-VERSION@</string>
+  <string>@commit@</string>
   <key>CFBundleShortVersionString</key>
-  <string>@OPENTRACK-VERSION@</string>
+  <string>@commit@</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -29,8 +29,8 @@
   <key>NSHighResolutionCapable</key>
   <string>True</string>
   <key>NSCameraUsageDescription</key>
-  <string>OpenTrack need's to access your camera to capture track head position.</string>
+  <string>Opentrack need's to access your camera to capture your headpose.</string>
   <key>NSDocumentsFolderUsageDescription</key>
-  <string>OpenTrack need's to access your to your documents folder to store settings</string>
+  <string>Opentrack need's to access your to your documents folder to store profiles.</string>
 </dict>
 </plist>

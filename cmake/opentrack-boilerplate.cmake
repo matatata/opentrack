@@ -4,6 +4,9 @@ if(POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
 endif()
 
+# TODO REMOVE... you need to properly configure RPATH
+set(MACOS_DEV_HELPER FALSE CACHE BOOL "Emit Frameworks and Plugins in opentrack.app's builddir? Not recommended for creating releases only development!")
+
 set(opentrack-perms-file WORLD_READ OWNER_WRITE OWNER_READ GROUP_READ)
 set(opentrack-perms-dir WORLD_READ WORLD_EXECUTE OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE)
 set(opentrack-perms-exec "${opentrack-perms-dir}")
@@ -227,9 +230,19 @@ function(otr_module n_)
                 install(TARGETS "${n}"
                 RUNTIME DESTINATION "${opentrack-bin}"
                 BUNDLE	DESTINATION "${opentrack-bin}"
-                LIBRARY DESTINATION "${opentrack-bin}/Library"
-                RESOURCE DESTINATION "${opentrack-bin}/opentrack.app/Resource"
+                LIBRARY DESTINATION "${opentrack-bin}/opentrack.app/Contents/Frameworks"
+                RESOURCE DESTINATION "${opentrack-bin}/opentrack.app/Contents/Resources"
                 PERMISSIONS ${opentrack-perms-exec})
+
+                # The next directive is useful while development for macOS. Otherwise opentrack cannot start from the IDE, because the libraries are missing
+                # With this directive libraries are placed in the build dir of opentrack.app at the right place. Use with care and not for install
+                if(MACOS_DEV_HELPER)
+                    set_target_properties( ${n}
+                        PROPERTIES
+                        LIBRARY_OUTPUT_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:opentrack-executable>/Frameworks"
+                    )
+                endif()
+
             else()
                 install(TARGETS "${n}"
                     RUNTIME DESTINATION "${opentrack-bin}"
@@ -238,10 +251,21 @@ function(otr_module n_)
             endif()
         else()
             # Plugins
+
             install(TARGETS "${n}"
-                    RUNTIME DESTINATION "${opentrack-libexec}"
-                    LIBRARY DESTINATION "${opentrack-libexec}"
-                    PERMISSIONS ${opentrack-perms-exec})
+                RUNTIME DESTINATION "${opentrack-libexec}"
+                LIBRARY DESTINATION "${opentrack-libexec}"
+                PERMISSIONS ${opentrack-perms-exec})
+
+            # The next directive is useful while development for macOS. Otherwise opentrack cannot start from the IDE, because the libraries are missing
+            # With this directive libraries are placed in the build dir of opentrack.app at the right place. Use with care and not for install
+            if(APPLE AND MACOS_DEV_HELPER)
+                set_target_properties( ${n}
+                    PROPERTIES
+                    LIBRARY_OUTPUT_DIRECTORY "$<TARGET_BUNDLE_CONTENT_DIR:opentrack-executable>/PlugIns/opentrack"
+                )
+            endif()
+
         endif()
 
         if(MSVC)
@@ -306,4 +330,28 @@ function(otr_install_lib target dest)
             install(FILES "${path}" DESTINATION "${dest}" PERMISSIONS ${opentrack-perms-exec})
         endif()
     endif()
+endfunction()
+
+
+function(otr_install_md_as_html mdfile destination)
+    get_filename_component(name_we ${mdfile} NAME_WE)
+    set(htmlfile "${CMAKE_CURRENT_BINARY_DIR}/${name_we}.html")
+    if(PANDOC)
+        string(SHA1 targetname "${mdfile}")
+
+        add_custom_command(
+            OUTPUT "${htmlfile}"
+            DEPENDS "${mdfile}"
+            COMMAND "${PANDOC}" --standalone
+                            "${mdfile}"
+                            -t html5 -o "${htmlfile}"
+        )
+        add_custom_target("${targetname}" ALL DEPENDS "${htmlfile}")
+
+        install(FILES "${htmlfile}" DESTINATION "${destination}")
+    else()
+        install(FILES "${mdfile}" DESTINATION "${destination}")
+        message(WARNING "Pandoc missing. Cannot make html from ${mdfile}. Will install markdown file. Please install pandoc")
+    endif()
+
 endfunction()

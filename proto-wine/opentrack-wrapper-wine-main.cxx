@@ -12,7 +12,7 @@ enum Axis {
 };
 
 #define __WINE_OLE2_H
-#include "compat/shm.h"
+#include "compat/shm.hpp"
 #include "wine-shm.h"
 
 void create_registry_key(void);

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>UICFTControls</class>
+ <widget class="QWidget" name="UICFTControls">
+  <property name="windowModality">
+   <enum>Qt::WindowModality::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1297</width>
+    <height>488</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Opentrack</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="ftx-protocol.qrc">
+    <normaloff>:/images/freetrack.png</normaloff>:/images/freetrack.png</iconset>
+  </property>
+  <property name="layoutDirection">
+   <enum>Qt::LayoutDirection::LeftToRight</enum>
+  </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>freetrackX 2.0 Enhanced</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Native games&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This module is aimed for native clients such using the &lt;span style=&quot; font-weight:704;&quot;&gt;freetrackclient library&lt;/span&gt; provided by Opentrack including a SDK.&lt;br/&gt;This resembles how freetrack and other popular headtracking solutions are integrated in games on the Windows platforms.&lt;br/&gt;As far as I know there are not many options neither on macOS nor Linux which is why I created it in order to invite developers&lt;br/&gt;to bring native headtracking to native macOS and Linux games as well. I kept the name freetrack to honor its effort and&lt;br/&gt;to point out its origin although it's really tied to Opentrack being a popular opensource headtracking solution.&lt;/p&gt;&lt;p&gt;As an example Opentrack's X-Plane plugin now use this library. I invite developers to do the same to their products.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Games run via Wine&lt;/span&gt;&lt;/p&gt;&lt;p&gt;The module should also be used for the usage with windows games running on macOS or Linux via &lt;a href=&quot;https://www.winehq.org&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;wine&lt;/span&gt;&lt;/a&gt; based solutions such as&lt;br/&gt;&lt;a href=&quot;https://www.codeweavers.com/crossover&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;CrossOver&lt;/span&gt;&lt;/a&gt;, &lt;a href=&quot;https://github.com/Sikarugir-App/Sikarugir&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;Sikarugir&lt;/span&gt;&lt;/a&gt; or Steam's Proton on Linux. Infact I expect this to be the most common usecase.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Important:&lt;/span&gt; For the Wine-integration to work you need to install so called builtin wine dlls that come with&lt;br/&gt;Opentrack as well. Please refer to the documentation provided &lt;a href=&quot;https://matatata.github.io/OpentrackWine.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#1f9b5d;&quot;&gt;here&lt;/span&gt;&lt;/a&gt; for more instructions.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Close</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="ftx-protocol.qrc"/>
+ </resources>
+ <connections/>
+ <slots>
+  <slot>startEngineClicked()</slot>
+  <slot>stopEngineClicked()</slot>
+  <slot>cameraSettingsClicked()</slot>
+ </slots>
+</ui>
