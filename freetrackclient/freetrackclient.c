@@ -15,7 +15,11 @@
  * *                                                                                *
  * *                                                                                *
  * * The FreeTrackClient sources were translated from the original Delphi sources   *
- * * created by the FreeTrack developers.                                           *
+ * * created by the FreeTrack developers.
+ *
+ *
+ * September 2025: The calls into Wine's unix call interface were adde
+ * by matatata https://github.com/matatata/opentrack                                     *
  */
 
 #ifdef __GNUC__
@@ -24,14 +28,22 @@
 #endif
 
 #include <string.h>
-#include <windows.h>
+#include <stdarg.h>
+#ifdef WINE_BUILTIN_DLL
+#include "freetrackclient_wine_unixlib.h"
+#else
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#endif
 
 #include "fttypes.h"
 
 #if defined _MSC_VER && !defined _WIN64
 #   define FT_EXPORT(t) t __stdcall
 #else
-#   define FT_EXPORT(t) __declspec(dllexport) t
+#   define FT_EXPORT(t) __declspec(dllexport) t __stdcall
 #endif
 
 
@@ -42,13 +54,36 @@ static FILE *debug_stream = fopen("c:\\FreeTrackClient.log", "a");
 #else
 #define dbg_report(...) ((void)0)
 #endif
-
+#ifndef WINE_BUILTIN_DLL
 static HANDLE hFTMemMap = 0;
 static FTHeap* ipc_heap = 0;
 static HANDLE ipc_mutex = 0;
+#endif
 static const char* dllVersion = "1.0.0.0";
 static const char* dllProvider = "FreeTrack";
 
+
+#ifdef WINE_BUILTIN_DLL
+BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, void *reserved)
+{
+    if (reason == DLL_PROCESS_ATTACH)
+    {
+        dbg_report("DLL_PROCESS_ATTACH\n");
+        if(__wine_init_unix_call()){
+            WINE_ERR("__wine_init_unix_call failed\n");
+            return FALSE;
+        }
+        WINE_TRACE("__wine_init_unix_call success\n");
+        DisableThreadLibraryCalls(instance);
+    }
+    else if(reason == DLL_PROCESS_DETACH){
+        dbg_report("DLL_PROCESS_DETACH\n");
+    }
+    return TRUE;
+}
+#endif
+
+#ifndef WINE_BUILTIN_DLL
 static BOOL impl_create_mapping(void)
 {
     if (ipc_heap != NULL)
@@ -66,12 +101,17 @@ static BOOL impl_create_mapping(void)
 
     ipc_heap = (FTHeap*) MapViewOfFile(hFTMemMap, FILE_MAP_WRITE, 0, 0, sizeof(FTHeap));
     ipc_mutex = CreateMutexA(NULL, FALSE, FREETRACK_MUTEX);
-
     return TRUE;
 }
+#endif
+
+
 
 FT_EXPORT(BOOL) FTGetData(FTData* data)
 {
+#ifdef WINE_BUILTIN_DLL
+    return WINE_UNIX_CALL(ft_get_data,(void*)data);
+#else
     if (impl_create_mapping() == FALSE)
         return FALSE;
 
@@ -82,6 +122,7 @@ FT_EXPORT(BOOL) FTGetData(FTData* data)
         ReleaseMutex(ipc_mutex);
     }
     return TRUE;
+#endif
 }
 
 /*

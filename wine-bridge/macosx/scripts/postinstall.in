@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# In scripts we always assume this being at /
+winebridge_dir="/@opentrack-install-winebridge@"
+winebridge_bin_dir="/@opentrack-install-winebridge-bin@"
+mkdir -p "$winebridge_dir/Logs"
+logfile="$winebridge_dir/Logs/install-$(date '+%Y-%m-%d-%H%M%S').log"
+# tee all output also to the logfile
+exec > >(tee -a "$logfile") 2>&1
+
+
+# Dureing development make the script exit immediately if something fails on the way:
+# set -e
+
+ask() {
+    echo $(osascript -s s << EOT
+        try
+            display alert "$1" message "$2"  buttons {"Skip", "Yes"} default button "Yes" cancel button "Skip"
+
+            if button returned of result = "Yes" then
+                return true
+            else
+                return false
+            end if
+        on error
+            return false
+        end try
+EOT
+    )
+}
+
+
+paths=$(find "$HOME/Applications/CrossOver.app"  /Applications/CrossOver.app /Applications/Wine*.app -print -maxdepth 0 2>/dev/null )
+
+IFS=$'\n'
+detectedPaths=( $paths )
+unset IFS
+
+title="Auto-Installation of Opentrack's Wine DLLs?"
+
+read -r -d '' message <<EOT
+I have found the following well-known Wine environments:
+
+$paths
+
+To save you some work, I can install required DLLs into the above right now. You can always use \"Opentrack DLL Manager\" to install or uninstall the DLLs later.
+
+Before starting your game, run \"Opentrack Wine Bridge.exe\" from within the same Wine-prefix/bottle.
+
+Please do refer to the README.html !
+EOT
+
+#see https://matthew-brett.github.io/docosx/flat_packages.html for environment vars like COMMAND_LINE_INSTALL
+
+if [[ -z "$COMMAND_LINE_INSTALL" || "$USER"=="root" ]]
+then
+    if [ ${#detectedPaths[@]} -gt 0 ]
+    then
+        echo "asking for auto-activation"
+        confirmed=$(ask "$title" "$message")
+        if [ "$confirmed" == "true" ]
+        then
+            echo "auto-activation confirmed"
+
+            if ! sudo -H -u "$USER" /bin/bash "$winebridge_bin_dir/otrwine.sh" \
+                    install "${detectedPaths[@]}"
+            then
+                echo "Installation was not entirely succesful"
+
+                osascript -e "tell application \"Finder\"" \
+                        -e "activate" \
+                        -e "reveal (POSIX file \"$logfile\" as alias)" \
+                        -e "end tell" &> /dev/null
+            else
+                echo "otrwine ok"
+            fi
+        else
+            echo "auto-activation cancelled"
+        fi
+    fi
+else
+    echo "Not performing any activation, because of COMMAND_LINE_INSTALL or User is root"
+fi
+
+# create symlink to otrwine tool in /usr/local/bin
+ln -sf "$winebridge_bin_dir/otrwine.sh" /usr/local/bin/otrwine
+ditto "$winebridge_bin_dir/wine-bridge-tool64.exe" "/Applications/Opentrack Wine Bridge.exe"
+
+echo "OK"
+exit 0
