@@ -86,7 +86,7 @@ IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX AND NOT APPLE)
-    add_compile_options(-fuse-cxa-atexit)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fuse-cxa-atexit>)
 
     if(LINUX) # assume binutils
         add_link_options(-Wl,--exclude-libs,ALL)
@@ -167,4 +167,25 @@ endif()
 
 if(LINUX AND CMAKE_COMPILER_IS_CLANG)
     link_libraries(atomic)
+endif()
+
+# needed for next gen wine stuff
+if(LINUX OR APPLE)
+    set(SDK_WINE_PATH "" CACHE PATH "Where did you clone the wine repo?")
+    find_program(MINGW_GCC_COMPILER64 NAMES x86_64-w64-mingw32-gcc)
+    find_program(MINGW_GCC_COMPILER NAMES i686-w64-mingw32-gcc)
+    find_program(MINGW_CXX_COMPILER64 NAMES x86_64-w64-mingw32-g++)
+    find_program(MINGW_CXX_COMPILER NAMES i686-w64-mingw32-g++)
+    find_program(MINGW_CXX_AR64 NAMES x86_64-w64-mingw32-ar)
+    find_program(MINGW_CXX_AR NAMES i686-w64-mingw32-ar)
+    find_program(MINGW_STRIP64 x86_64-w64-mingw32-strip)
+    find_program(MINGW_STRIP i686-w64-mingw32-strip)
+    find_program(MINGW_WINDRES64 x86_64-w64-mingw32-windres)
+    find_program(MINGW_WINDRES i686-w64-mingw32-windres)
+
+
+    find_program(WINEGCC_COMPILER NAMES winegcc)
+    find_program(WINECXX_COMPILER NAMES wineg++)
+
+    find_program(PANDOC pandoc)
 endif()
