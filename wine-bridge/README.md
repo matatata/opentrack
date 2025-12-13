@@ -1,6 +1,6 @@
 # Opentrack Wine Bridge
 
-This is an alternative approach to get Opentrack with Windows-Games running via Wine. There are [known issues](https://trac.macports.org/ticket/72792) particularly on macOS that made me create all this. It consist of a set of custom so-called Wine builtin DLLs, accompanying unix libraries, and tools to facilitate the installation and setup.
+This is an alternative approach to get native Opentrack working with Windows-Games running via Wine. There are [known issues](https://trac.macports.org/ticket/72792) particularly on macOS that made me create all this. It consist of a set of custom so-called Wine builtin DLLs, accompanying unix libraries, and tools to facilitate the installation and setup.
 
 The linux build happens to work fine on Linux as well. I successfully tested it with Steam's Proton and a few games. I intend to support Linux as well, but for now macOS and CrossOver is my primary focus.
 

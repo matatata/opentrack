@@ -29,7 +29,7 @@ if((LINUX OR APPLE) AND (EXISTS "${SDK_WINE_PATH}" AND IS_DIRECTORY "${SDK_WINE_
         )
 
         if(OTR_WINE_BRIDGE_DEMO_PERIOD)
-            target_compile_definitions("${targetname}" PRIVATE OTR_WINE_BRIDGE_DEMO_PERIOD)
+            target_compile_definitions("${targetname}" PRIVATE OTR_WINE_BRIDGE_DEMO_PERIOD=${OTR_WINE_BRIDGE_DEMO_PERIOD})
         endif()
 
         # if(APPLE)
