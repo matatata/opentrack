@@ -110,12 +110,10 @@ void WineBridgeSettings::GetCurrentSettings(){
         prefProto = 3;
     }
 
-    if(isVerbose()) {
-        stringstream output;
-        printCurrentSettings(output);
-        WritePaths(prefProto,output);
-        logger->log(output.str());
-    }
+    stringstream output;
+    printCurrentSettings(output);
+    WritePaths(prefProto,output);
+    logger->log(output.str());
 
     proto = prefProto;
 }
