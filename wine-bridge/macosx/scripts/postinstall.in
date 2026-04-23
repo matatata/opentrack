@@ -83,7 +83,8 @@ else
 fi
 
 # create symlink to otrwine tool in /usr/local/bin
-ln -sf "$winebridge_bin_dir/otrwine.sh" /usr/local/bin/otrwine
+mkdir -vp /usr/local/bin/
+ln -svf "$winebridge_bin_dir/otrwine.sh" /usr/local/bin/otrwine
 ditto "$winebridge_bin_dir/wine-bridge-tool64.exe" "/Applications/Opentrack Wine Bridge.exe"
 
 echo "OK"
