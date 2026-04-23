@@ -41,7 +41,7 @@ get_script_dir()
 
 SCRIPT_DIR=$(get_script_dir)
 OTR_WINEDLLPATH="${OTR_WINEDLLPATH:-"$SCRIPT_DIR/../lib/wine"}"
-PICKLE_CMD="${SCRIPT_DIR}/pickle.app/Contents/MacOS/pickle"
+PICKLE_CMD="${SCRIPT_DIR}/../pickle.app/Contents/MacOS/pickle"
 
 echo_stderr() {
     >&2 echo "$@"
