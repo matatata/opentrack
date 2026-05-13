@@ -58,6 +58,9 @@ if(LINUX OR APPLE)
             LIBRARY DESTINATION ${xplane_plugin_install_dir}
             PERMISSIONS ${opentrack-perms-exec})
 
+        otr_install_md_as_html("${CMAKE_CURRENT_SOURCE_DIR}/README.md" "${opentrack-install-xplane}")
+
+
         if(CMAKE_COMPILER_IS_GNUCC AND NOT CMAKE_COMPILER_IS_CLANG)
             target_link_options(${self} PRIVATE -undefined_warning)
         endif()
