@@ -10,6 +10,14 @@ if(SDK_OSCPACK)
         link_directories("${SDK_OSCPACK}/lib" "${SDK_OSCPACK}/lib32")
         include_directories("${SDK_OSCPACK}/include/oscpack")
     endif()
-    link_libraries(oscpack)
+    if(APPLE)
+        # I don't know how to make the .so file end up in the .app bundle, So I link statically.
+        # For that I use my fork of ocapack https://github.com/matatata/oscpack which builds a static library as well.
+        # Build and install it with 'make install' and set SDP_OSCPACK to /usr/local
+        find_library(OSCPACK_STATIC_LIB liboscpack.a "${SDK_OSCPACK}/lib/")
+        link_libraries(${OSCPACK_STATIC_LIB})
+    else()
+        link_libraries(oscpack)
+    endif()
     otr_module(proto-osc)
 endif()
