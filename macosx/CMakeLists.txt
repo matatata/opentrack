@@ -6,13 +6,18 @@ if(APPLE)
     configure_file(Info.in.plist Info.plist @ONLY)
     set_target_properties(opentrack-executable PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist")
 
+
+    otr_install_md_as_html("${CMAKE_CURRENT_SOURCE_DIR}/README.md" "${CMAKE_INSTALL_PREFIX}")
+
+
     install(CODE "
        execute_process(COMMAND /bin/sh \"${srcdir}/macosx/make-app-bundle.sh\"
                                         \"${srcdir}/macosx\"
                                         \"${instdir}\"
                                        \"${commit}\"
+                                       \"${CMAKE_CURRENT_BINARY_DIR}\"
                                        \"${CMAKE_OSX_ARCHITECTURES}\"
-                                       \"${MACDEPLOYQT_EXECUTABLE}\")
+                                       \"${MACDEPLOYQT_EXECUTABLE}\"\)
     ")
 
 endif()

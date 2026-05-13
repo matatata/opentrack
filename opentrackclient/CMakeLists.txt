@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-
 if(LINUX OR APPLE)
     project(libopentrackclient VERSION 1.0.0
         DESCRIPTION "This is a client library for the Opentrack protocol"
@@ -41,8 +40,7 @@ if(LINUX OR APPLE)
 
         set_target_properties("${targetname}" PROPERTIES
             OUTPUT_NAME "${arg_NAME}${arg_ARCH}"
-            INSTALL_NAME_DIR "${arg_INSTALL_NAME_DIR}"
-            INSTALL_RPATH ""
+            # INSTALL_NAME_DIR "${arg_INSTALL_NAME_DIR}"
         )
 
         if(APPLE AND arg_FRAMEWORK)
@@ -94,7 +92,7 @@ if(LINUX OR APPLE)
             SOURCES "${CLIENT_SOURCES}"
             HEADERS "${CLIENT_HEADERS}"
             CFLAGS "-DOTR_REQUIRED"
-            INSTALL_NAME_DIR "${opentrack-runtime-opentrackclient-lib-rpath}"
+            # INSTALL_NAME_DIR "${opentrack-runtime-opentrackclient-lib-rpath}"
         )
 
         add_lib(NAME "opentrackclient"
@@ -110,7 +108,7 @@ if(LINUX OR APPLE)
             SOURCES "${CLIENT_SOURCES}"
             HEADERS "${CLIENT_HEADERS}"
             CFLAGS "-DOTR_REQUIRED"
-            INSTALL_NAME_DIR "${opentrack-runtime-opentrackclient-framework-rpath}"
+            # INSTALL_NAME_DIR "${opentrack-runtime-opentrackclient-framework-rpath}"
         )
 
         # also create frameworks
@@ -119,11 +117,12 @@ if(LINUX OR APPLE)
             SOURCES "${CLIENT_SOURCES}"
             HEADERS "${CLIENT_HEADERS}"
             CFLAGS "-DOTR_REQUIRED"
+            # INSTALL_NAME_DIR "${opentrack-runtime-opentrackclient-framework-rpath}"
         )
 
 
         install(TARGETS
-            "libopentrackclient"  "framework_opentrackclient" "framework_opentrackclient-loader_static"
+            "framework_opentrackclient" #"libopentrackclient" "framework_opentrackclient-loader_static"
             FRAMEWORK DESTINATION "${opentrack-install-opentrackclient-framework}"
             LIBRARY DESTINATION "${opentrack-install-opentrackclient-lib}"
             PUBLIC_HEADER DESTINATION "${opentrack-install-opentrackclient-include}"
@@ -176,11 +175,6 @@ if(LINUX OR APPLE)
             LIBRARY DESTINATION "${opentrack-install-opentrackclient-lib}"
             PUBLIC_HEADER DESTINATION "${opentrack-install-opentrackclient-include}/opentrackclient"
         )
-
-        install(FILES
-            ${CLIENTLOADER_SOURCES}
-            DESTINATION "${opentrack-install-opentrackclient-sdk}"
-        )
     endif()
 
 
@@ -201,9 +195,14 @@ if(LINUX OR APPLE)
             target_link_libraries("${targetname}" PRIVATE dl)
         endif()
 
+
+
+
         if(APPLE)
             # set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "")
-            # target_link_libraries("${targetname}" PRIVATE $<LINK_LIBRARY:WEAK_FRAMEWORK,framework_opentrackclient>)
+            #target_link_libraries("${targetname}" PRIVATE $<LINK_LIBRARY:WEAK_FRAMEWORK,framework_opentrackclient>)
+            #set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "${opentrack-runtime-opentrackclient-framework-rpath}")
+            set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "@executable_path")
             target_link_libraries("${targetname}" PRIVATE framework_opentrackclient)
         else()
             set_target_properties("${targetname}" PROPERTIES INSTALL_RPATH "${opentrack-runtime-opentrackclient-lib-rpath}")
@@ -212,10 +211,10 @@ if(LINUX OR APPLE)
 
         install(FILES
             ${otrclient-tester-deps}
-            DESTINATION "${opentrack-install-opentrackclient-sdk}"
+            DESTINATION "${opentrack-install-opentrackclient-example}"
         )
         install(TARGETS ${targetname}
-            RUNTIME DESTINATION "${opentrack-install-opentrackclient-sdk}")
+            RUNTIME DESTINATION "${opentrack-install-opentrackclient-example}")
 
     endfunction()
 

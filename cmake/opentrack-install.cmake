@@ -27,9 +27,10 @@ function(cleanup_visual_studio_debug)
 endfunction()
 
 otr_install_dir("${opentrack-doc}" "3rdparty-notices")
-otr_install_dir("${opentrack-doc}" "${CMAKE_SOURCE_DIR}/contrib")
-otr_install_dir("${opentrack-game-csv-doc}" "settings")
-otr_install_dir("${opentrack-libexec}" "presets")
+otr_install_dir("${opentrack-doc}" "settings" "${CMAKE_SOURCE_DIR}/contrib")
+if(NOT APPLE)
+    otr_install_dir("${opentrack-libexec}" "presets")
+endif()
 
 if(WIN32)
     if(CMAKE_SIZEOF_VOID_P EQUAL 4)
@@ -53,12 +54,12 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     cleanup_visual_studio_debug()
 endif()
 
+set(THIRDPARTY_INSTALL_DIR "${opentrack-libexec}")
+
 # For now copy third party needed files into a seperate direcvtory instead of the plugins directory
-# the on macOS deprecated proto-wine needs them though
+# unless prot-wine is used
 if (APPLE AND NOT SDK_WINE)
-    set(THIRDPARTY_INSTALL_DIR "${opentrack-aux}/thirdparty")
-else()
-    set(THIRDPARTY_INSTALL_DIR "${opentrack-libexec}")
+    set(THIRDPARTY_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/thirdparty")
 endif()
 otr_install_exec("${THIRDPARTY_INSTALL_DIR}" FILES
     "bin/freetrackclient.dll"

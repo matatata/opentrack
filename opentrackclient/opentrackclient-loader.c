@@ -48,12 +48,10 @@ void *load_symbol(void *lib_handle,const char* symbol_name){
 }
 
 static const char* dlopen_prefixes[] = {
-    "", // first let rpath and LD_LIBRARY_PATH DYLD_LIBRARY_PATH do it's magic
-#if __APPLE__
-    "/Library/Frameworks/opentrackclient.framework"
-#else
-    "/opt/opentrack/lib"
-#endif
+    "" // let rpath and LD_LIBRARY_PATH DYLD_LIBRARY_PATH do it's magic
+// #if __APPLE__
+//     ,"/Library/Frameworks/opentrackclient.framework"
+// #endif
     ,NULL // NULL terminate
 };
 

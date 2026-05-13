@@ -6,5 +6,5 @@ then
     exit 1
 fi
 
-docker run --rm -v $(pwd)/..:/otr -v "$WINE_HOME:/wine" otrubuntu /build.sh
+docker run --rm -v $(pwd)/..:/otr -v "$WINE_HOME:/wine" -v $(pwd)/opt/opentrack:/opt/opentrack otrubuntu /build.sh
 

@@ -20,8 +20,9 @@ install="$2"
 test -n "$install"
 version="$3"
 test -n "$version"
-osx_arch="${4:-'unknownarch'}"
-macdeployqt_executable="${5:-macdeployqt}"
+bindir="${4}"
+osx_arch="${5:-'unknownarch'}"
+macdeployqt_executable="${6:-macdeployqt}"
 
 if [ -n "$CODESIGN" ]
 then
@@ -33,7 +34,9 @@ fi
 tmp="$(mktemp -d "/tmp/$APPNAME-tmp.XXXXXXX")"
 test $? -eq 0
 
-APPROOT="$install/Applications/$APPNAME.app"
+APPROOT="$install/$APPNAME.app"
+XPLANE_PLUGIN="$install/X-Plane-Plugin"
+SDK="$install/sdk"
 
 # TODO this is actually good
 # Add rpath for application so it can find the libraries
@@ -67,22 +70,48 @@ else
     echo "Not using macdeployqt to make the app standalone. Enable with env variable DEPLOY=1"
 fi
 
+function do_codesign() {
+    codesign -vv --force --timestamp --options runtime --sign "$CODESIGN_IDENTITY" "$@"
+}
+
 if [ -n "$CODESIGN_IDENTITY" ]
 then
-  # first nested libaries, frameworks and plugins
-  find  "$APPROOT"  \(  \( -type f -name "*.dylib" -path "*/Contents/Frameworks/*" \) \
-                    -o \( -type d -path "*/Contents/Frameworks/*.framework" \) \
-                    -o \( -type f -name "*.dylib" -path "*/Contents/PlugIns/*" \) \
-                    \)  -exec codesign  -vv --force --timestamp --sign "$CODESIGN_IDENTITY" "{}" \;
-  # last the bundle itself
-  codesign -vv --force --options runtime --timestamp --entitlements $dir/entitlements.plist --sign "$CODESIGN_IDENTITY" "$APPROOT"
+    find "$APPROOT" -type f \( \
+        \( -path "*/Contents/Frameworks/*" -name "*.dylib" \) -o \
+        \( -path "*/Contents/PlugIns/*" \( -name "*.dylib" -o -name "*.onnx" \) \) -o \
+        \( -path "*/Contents/Resources/*" \( -name "*.dll" -o -name "*.exe" \) \) \
+    \) -print0 | while IFS= read -r -d '' file; do
+        do_codesign "$file"
+    done
 
-  # Now everything else (except wine-bridgewhich  has it's own script)
-  # X-Plane
+    if [ -d "$APPROOT/Contents/Frameworks" ]; then
+        find "$APPROOT/Contents/Frameworks" -type d -name "*.framework" -print0 | while IFS= read -r -d '' fw; do
+            do_codesign "$fw"
+        done
+    fi
+
+    do_codesign --entitlements "$dir/entitlements.plist" "$APPROOT"
+    codesign -vvv --deep --strict "$APPROOT"
 
 
-  #find "$install/usr/" "$install/xplane/" "$install/doc/" "$install/wine-bridge/" "$install/SDK/" "$install/usr" -type f -exec codesign --force --verify -vv --options runtime --sign "$CODESIGN_IDENTITY" {} \;
+    if [ -d "$XPLANE_PLUGIN" ]
+    then
+        # Sign X-Plane-Plugin
+        do_codesign  "$XPLANE_PLUGIN/opentrack/mac_x64/opentrack.xpl"
+        codesign -vvv --deep --strict "$XPLANE_PLUGIN/opentrack/mac_x64/opentrack.xpl"
+    fi
+
+    # Sign the opentrackclient framework
+    do_codesign "$SDK/opentrackclient.framework/Versions/A/opentrackclient"
+    do_codesign "$SDK//opentrackclient.framework"
+    codesign -vvv --deep --strict "$SDK//opentrackclient.framework"
+
+    do_codesign "$SDK/otrclient-tester"
+    codesign -vvv --deep --strict "$SDK/otrclient-tester"
+
 fi
+
+# wine-bridge has it's own script)
 
 
 if [ -z "$PACKAGE" ]
@@ -99,62 +128,36 @@ fi
 #  - /Applications/Opentrack.app
 #  - /Library/Application Support/opentrack
 #  - /Library/Application Support/opentrack-wine-bridge
-#  TODO
+#  - X-Plane-Plugin
 
 ####################################
 
-
-# create pkg
-pkgroot="$install/../pkgroot"
-rm -rf "$pkgroot" &> /dev/null
-
-ditto "$APPROOT" "$pkgroot/Applications/$APPNAME.app"
-ditto "$install/usr" "$pkgroot/usr"
-
-appsupportroot="$pkgroot/Library/Application Support/$APPNAME"
-mkdir -p "$appsupportroot"
-for d in xplane doc wine-bridge SDK
-do
-    ditto "$install/$d" "$appsupportroot/$d"
-done
+tmpdir=$(mktemp -d)
 
 
-#xattr -cr "$pkgroot"
+ditto "$install/" "$tmpdir/"
 
-PGKFILE="${version}_${osx_arch}.pkg"
-rm -f *.pkg
-pkgbuild --root "$pkgroot"  \
-    --install-location / \
-    --script $dir/scripts \
-    --component-plist ../opentrack/macosx/MacOpentrack-pkg.plist \
-    --version "${version}" \
-    --identifier com.github.opentrack.pkg   \
-    "${PGKFILE}_unsigned.pkg"
+#ditto "$pkgroot/@opentrack-install-winebridge@/README".*  "$tmpdir/"
 
-if productsign --sign "Developer ID Installer" "${PGKFILE}_unsigned.pkg" "$PGKFILE"
+rm -f "$bindir"/*.dmg
+DMGFILE="$bindir/MacOpentrack_${version}.dmg"
+
+hdiutil create   -srcfolder "$tmpdir" -volname "MacOpentrack" -ov -format UDZO "$DMGFILE" #-size 250m
+codesign  -vv --force --sign "$CODESIGN_IDENTITY" "$DMGFILE"
+
+rm -rf "$tmpdir"
+
+
+if [ -n "$NOTARIZE" ]
 then
-    pkgutil --check-signature  "$PGKFILE"
-    rm "${PGKFILE}_unsigned.pkg"
-else
-    echo "could not sign ${PGKFILE}_unsigned.pkg"
-    mv "${PGKFILE}_unsigned.pkg" "${PGKFILE}.pkg"
+    xcrun notarytool submit "$DMGFILE" \
+                   --keychain-profile "notarytool-password" \
+                   --verbose \
+                   --wait \
+
+    xcrun stapler staple -v "$DMGFILE"
+
 fi
 
-
-
-# Check if we have a pkg otherwise fail
-
-if [ -f "$PGKFILE" ]; then
-
-  #To notarize do this:
-  #xcrun notarytool submit "$DMGFILE" --apple-id appleid@example.com--team-id "TEAM_ID" --password "specific-app-password" --verbose --wait
-  #
-  #xcrun stapler staple -v "$DMGFILE"
-
-  ls -ial "$PGKFILE"
-else
-   echo "Failed to create $PGKFILE"
-   exit 2
-fi
 
 

@@ -1,0 +1,1 @@
+This is something GEMINI produced in seconds. It shows how easy it is to read the headpose when using the UDP network output protocol. I wonder why game developer do not offer this. At least on macOS or Linux it would be an easy addition to native games.

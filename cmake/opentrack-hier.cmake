@@ -12,28 +12,28 @@ include_guard(GLOBAL)
 
 if(APPLE)
     set(macos-application-support-dir "Library/Application Support")
-    set(opentrack-bin "Applications")
+    set(opentrack-bin "${CMAKE_INSTALL_PREFIX}")
     set(opentrack-libexec "${opentrack-bin}/opentrack.app/Contents/PlugIns/opentrack")
-    set(opentrack-runtime-libexec "/../PlugIns/opentrack/")                        # MUST HAVE A TRAILING BACKSLASH, Used in APP
-    set(opentrack-runtime-doc "/../Resources/")
-    set(opentrack-aux "${macos-application-support-dir}/opentrack")
-    set(opentrack-doc "${opentrack-aux}/doc")
-    set(opentrack-game-csv-doc "${opentrack-bin}/opentrack.app/Contents/Resources") # settings/freetracknoir supported games.csv goes here
+    set(opentrack-runtime-libexec "/../PlugIns/opentrack/")  # MUST HAVE A TRAILING BACKSLASH, Used in APP
+    set(opentrack-runtime-doc "/../Resources/doc/") # MUST HAVE A TRAILING BACKSLASH, Used in APP
+    set(opentrack-doc "${opentrack-bin}/opentrack.app/Contents/Resources/doc")
     set(opentrack-i18n "${opentrack-bin}/opentrack.app/Contents/Resources") # used during install
     set(opentrack-runtime-i18n "../Resources/i18n") # used in application
     set(opentrack-install-rpath "@executable_path/../Frameworks")
-    set(opentrack-install-xplane "${opentrack-aux}/X-Plane-Plugin")
 
-    set(opentrack-install-winebridge "${macos-application-support-dir}/opentrack-wine-bridge")
+    set(opentrack-install-xplane "X-Plane-Plugin")
+
+    set(opentrack-install-winebridge "§{macos-application-support-dir}/opentrack-wine-bridge")
     set(opentrack-install-wine-unixlib "${opentrack-install-winebridge}/lib/wine")
     set(opentrack-install-winebridge-bin "${opentrack-install-winebridge}/bin")
-    set(opentrack-install-opentrackclient-prefix "${opentrack-aux}")
-    set(opentrack-install-opentrackclient-include "${opentrack-install-opentrackclient-prefix}/include")
-    set(opentrack-install-opentrackclient-lib "${opentrack-install-opentrackclient-prefix}/lib")
-    set(opentrack-runtime-opentrackclient-lib-rpath "${CMAKE_INSTALL_PREFIX}/${opentrack-install-opentrackclient-lib}")
-    set(opentrack-install-opentrackclient-framework "${opentrack-aux}/Frameworks")
-    set(opentrack-runtime-opentrackclient-framework-rpath "${CMAKE_INSTALL_PREFIX}/${opentrack-install-opentrackclient-framework}")
-    set(opentrack-install-opentrackclient-sdk "${opentrack-aux}/SDK")
+
+    set(opentrack-install-opentrackclient-prefix "sdk")
+    #set(opentrack-install-opentrackclient-include "${opentrack-install-opentrackclient-prefix}/include")
+    #set(opentrack-install-opentrackclient-lib "${opentrack-install-opentrackclient-prefix}/lib")
+    #set(opentrack-runtime-opentrackclient-lib-rpath "/${opentrack-install-opentrackclient-lib}")
+    set(opentrack-install-opentrackclient-framework "${opentrack-install-opentrackclient-prefix}")
+    #set(opentrack-runtime-opentrackclient-framework-rpath "/${opentrack-install-opentrackclient-framework}")
+    set(opentrack-install-opentrackclient-example "${opentrack-install-opentrackclient-prefix}")
 
 elseif(WIN32)
     set(opentrack-libexec "modules")
@@ -41,7 +41,6 @@ elseif(WIN32)
     set(opentrack-runtime-doc "/doc/")                     # MUST HAVE A TRAILING BACKSLASH
     set(opentrack-bin ".")
     set(opentrack-doc "doc")
-    set(opentrack-game-csv-doc "doc")  # settings/freetracknoir supported games.csv goes here
     set(opentrack-i18n "i18n")
     set(opentrack-runtime-i18n "./i18n")
     set(opentrack-debug "debug")
@@ -51,13 +50,11 @@ else()
     set(opentrack-runtime-libexec "/../${opentrack-libexec}/")   # MUST HAVE A TRAILING BACKSLASH
     set(opentrack-runtime-doc "/../share/doc/opentrack/")         # MUST HAVE A TRAILING BACKSLASH
     set(opentrack-bin "bin")
-    set(opentrack-aux "share/opentrack")
     set(opentrack-doc "share/doc/opentrack")
-    set(opentrack-game-csv-doc "share/doc/opentrack")  # settings/freetracknoir supported games.csv goes here
     set(opentrack-install-rpath "${CMAKE_INSTALL_PREFIX}/${opentrack-libexec}")
     set(opentrack-i18n "share/opentrack/i18n")
     set(opentrack-runtime-i18n "../share/opentrack/i18n")
-    set(opentrack-install-xplane "${opentrack-aux}/xplane")
+    set(opentrack-install-xplane "share/opentrack/xplane")
 
     set(opentrack-install-winebridge "share/opentrack-wine-bridge")
     set(opentrack-install-wine-unixlib "${opentrack-install-winebridge}/lib/wine")
@@ -65,8 +62,8 @@ else()
     set(opentrack-install-opentrackclient-prefix "${CMAKE_INSTALL_PREFIX}")
     set(opentrack-install-opentrackclient-include "${opentrack-install-opentrackclient-prefix}/include")
     set(opentrack-install-opentrackclient-lib "${opentrack-install-opentrackclient-prefix}/lib")
-    set(opentrack-runtime-opentrackclient-lib-rpath "${CMAKE_INSTALL_PREFIX}/${opentrack-install-opentrackclient-lib}")
-    set(opentrack-install-opentrackclient-sdk "${opentrack-aux}/SDK")
+    set(opentrack-runtime-opentrackclient-lib-rpath "${opentrack-install-opentrackclient-lib}")
+    set(opentrack-install-opentrackclient-example "${opentrack-doc}/opentrackclient-example")
 
 endif()
 
