@@ -1,4 +1,5 @@
-if(LINUX OR APPLE)
+set(OTR_WINEBRIDGE FALSE CACHE BOOL "Should otr wine bridge be built?")
+if((LINUX OR APPLE) AND OTR_WINEBRIDGE)
     set(OTR_WINE_BRIDGE_DEMO_PERIOD "30" CACHE STRING "Demo runtime period of wine-bridge in minutes. Set to a positive number to enable it or leave empty for the full version.")
 
     if(OTR_WINE_BRIDGE_DEMO_PERIOD GREATER 0)
