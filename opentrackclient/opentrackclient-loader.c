@@ -27,6 +27,7 @@
 #error "You should have defined OTR_OPTIONAL when intending to use the loader"
 //#define OTR_OPTIONAL
 #endif
+
 #include "opentrackclient/opentrackclient.h"
 
 bool (*importedOTRGetData)(OTRHeadpose*) = NULL;
@@ -49,23 +50,19 @@ void *load_symbol(void *lib_handle,const char* symbol_name){
 
 static const char* dlopen_prefixes[] = {
     "" // let rpath and LD_LIBRARY_PATH DYLD_LIBRARY_PATH do it's magic
-// #if __APPLE__
-//     ,"/Library/Frameworks/opentrackclient.framework"
-// #endif
     ,NULL // NULL terminate
 };
 
-
 #if __APPLE__
-// framework
-#define LIB_FILE_NAME "opentrackclient"
-#else
-#if defined __i386__
-#define LIB_FILE_NAME "libopentrackclient.so"
-#else
+    #error You should not use this file on macOS but weakly link against opentrackclient.framework via -weak_framework opentrackclient
+#endif
+
+#if defined __x86_64__
 #define LIB_FILE_NAME "libopentrackclient64.so"
+#else
+#define LIB_FILE_NAME "libopentrackclient.so"
 #endif
-#endif
+
 
 #define OTRGetDataSymbol "OTRGetData"
 #define OTRGetNPDataSymbol "OTRGetNPData"

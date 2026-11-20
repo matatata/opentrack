@@ -19,7 +19,7 @@
  * the api defined in the public header opentrackclient.h
  * If you use private API then you should link statically.
  */
-#include "opentrackclient.h"
+#include "opentrackclient/opentrackclient.h"
 
 #include <math.h>
 

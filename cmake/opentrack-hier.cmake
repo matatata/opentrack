@@ -27,14 +27,6 @@ if(APPLE)
     set(opentrack-install-wine-unixlib "${opentrack-install-winebridge}/lib/wine")
     set(opentrack-install-winebridge-bin "${opentrack-install-winebridge}/bin")
 
-    set(opentrack-install-opentrackclient-prefix "sdk")
-    #set(opentrack-install-opentrackclient-include "${opentrack-install-opentrackclient-prefix}/include")
-    #set(opentrack-install-opentrackclient-lib "${opentrack-install-opentrackclient-prefix}/lib")
-    #set(opentrack-runtime-opentrackclient-lib-rpath "/${opentrack-install-opentrackclient-lib}")
-    set(opentrack-install-opentrackclient-framework "${opentrack-install-opentrackclient-prefix}")
-    #set(opentrack-runtime-opentrackclient-framework-rpath "/${opentrack-install-opentrackclient-framework}")
-    set(opentrack-install-opentrackclient-example "${opentrack-install-opentrackclient-prefix}")
-
 elseif(WIN32)
     set(opentrack-libexec "modules")
     set(opentrack-runtime-libexec "/${opentrack-libexec}/")  # MUST HAVE A TRAILING BACKSLASH
@@ -59,11 +51,7 @@ else()
     set(opentrack-install-winebridge "share/opentrack-wine-bridge")
     set(opentrack-install-wine-unixlib "${opentrack-install-winebridge}/lib/wine")
     set(opentrack-install-winebridge-bin "${opentrack-install-winebridge}/bin")
-    set(opentrack-install-opentrackclient-prefix "${CMAKE_INSTALL_PREFIX}")
-    set(opentrack-install-opentrackclient-include "${opentrack-install-opentrackclient-prefix}/include")
-    set(opentrack-install-opentrackclient-lib "${opentrack-install-opentrackclient-prefix}/lib")
-    set(opentrack-runtime-opentrackclient-lib-rpath "${opentrack-install-opentrackclient-lib}")
-    set(opentrack-install-opentrackclient-example "${opentrack-doc}/opentrackclient-example")
+
 
 endif()
 
