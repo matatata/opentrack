@@ -43,7 +43,11 @@ SDK="$install/sdk"
 
 # Create an 512 resolution size for the icon (for retina displays mostly)
 #gm convert -size 512x512 "$dir/../gui/images/opentrack.png" "$tmp/opentrack.png"
-magick convert "$dir/../gui/images/opentrack.png" -filter triangle -resize 512x512 "$tmp/opentrack.png"
+if command -v convert >/dev/null 2>&1; then
+    convert "$dir/../gui/images/opentrack.png" -filter triangle -resize 512x512 "$tmp/opentrack.png"
+elif command -v magick >/dev/null 2>&1; then
+    magick convert "$dir/../gui/images/opentrack.png" -filter triangle -resize 512x512 "$tmp/opentrack.png"
+fi
 
 mkdir -p "$APPROOT/Contents/Resources/"
 
